@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Я — Звезда · Метафорические карты</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09080f;--panel:#14101e;--panel2:#1c1728;
+  --gold:#c9a256;--gold-l:#e0bc78;--gold-pale:rgba(201,162,86,.12);
+  --border:rgba(201,162,86,.2);--text:#e8dcc8;--text-m:rgba(232,220,200,.65);
+  --text-s:rgba(232,220,200,.32);--qpw:380px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Jost',sans-serif;font-weight:300;color:var(--text);user-select:none;font-size:14px}
+
+#stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+.neb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.neb1{width:600px;height:600px;top:-150px;left:-150px;background:radial-gradient(circle,#2d1460,transparent);opacity:.16}
+.neb2{width:500px;height:500px;bottom:-120px;right:-120px;background:radial-gradient(circle,#0e2060,transparent);opacity:.12}
+
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+/* ── HEADER ── */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;
+      border-bottom:1px solid var(--border);background:rgba(9,8,15,.85);backdrop-filter:blur(20px);
+      flex-shrink:0;min-height:54px;gap:8px}
+.hdr-brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hdr-star{font-size:20px;color:var(--gold);animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{0%,100%{text-shadow:0 0 8px rgba(201,162,86,.3)}50%{text-shadow:0 0 24px rgba(201,162,86,.9)}}
+.hdr-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--gold-l);letter-spacing:.06em}
+.hdr-title em{font-style:italic}
+.hdr-sub{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-s);margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.btn{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+      padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;
+      color:var(--text-m);cursor:pointer;transition:all .25s;white-space:nowrap}
+.btn:hover,.btn:active{border-color:var(--gold);color:var(--gold-l);background:var(--gold-pale)}
+.btn-gold{border-color:var(--gold);color:var(--gold-l);background:var(--gold-pale)}
+.counter{font-size:10px;color:var(--text-s);letter-spacing:.06em;white-space:nowrap}
+
+/* ── BODY LAYOUT ── */
+.app-body{flex:1;display:flex;overflow:hidden;min-height:0;position:relative}
+
+/* ── FIELD PANEL ── */
+.field-panel{flex:1;position:relative;overflow:hidden;min-width:0}
+
+/* rays canvas */
+#raysCanvas{position:absolute;inset:0;pointer-events:none;z-index:0}
+
+/* field grid */
+.field{
+  position:absolute;inset:10px 12px 8px 12px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-template-rows:repeat(3,1fr);
+  gap:clamp(6px,.7vw,12px);
+  z-index:1;
+}
+
+/* ── SLOT ── */
+.slot{
+  border-radius:10px;border:1.5px dashed rgba(110,88,44,.55);
+  background:rgba(255,255,255,.03);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;position:relative;min-height:0;min-width:0;
+  animation:slotIn .6s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes slotIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.slot:hover,.slot:active{border-color:rgba(201,162,86,.5);background:rgba(201,162,86,.07);
+             box-shadow:0 6px 24px rgba(0,0,0,.4),0 0 18px rgba(201,162,86,.09)}
+.slot.filled{border-style:solid;border-color:rgba(201,162,86,.5);
+              box-shadow:0 4px 20px rgba(0,0,0,.45),0 0 0 1px rgba(201,162,86,.12)}
+.slot.filled:hover{box-shadow:0 8px 32px rgba(0,0,0,.55),0 0 28px rgba(201,162,86,.16)}
+.slot.active-hl{border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,162,86,.35)}
+
+.slot-icon{font-size:clamp(15px,1.8vw,22px);color:rgba(201,162,86,.32);transition:all .3s;pointer-events:none}
+.slot:hover .slot-icon,.slot:active .slot-icon{color:rgba(201,162,86,.55);transform:scale(1.1)}
+.slot.filled .slot-icon{display:none}
+.slot-label{font-size:clamp(8px,.75vw,11px);letter-spacing:.1em;text-transform:uppercase;
+             color:rgba(232,220,200,.32);margin-top:5px;text-align:center;line-height:1.3;
+             pointer-events:none;transition:color .3s;padding:0 4px;max-width:100%}
+.slot:hover .slot-label,.slot:active .slot-label{color:rgba(201,162,86,.55)}
+.slot.filled .slot-label{display:none}
+
+.slot-card-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+                 overflow:hidden;border-radius:9px}
+.slot-card-wrap svg{height:100%;width:auto;display:block;border-radius:8px;
+                     filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
+.slot-remove{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;
+             background:rgba(9,8,15,.9);border:1px solid rgba(201,162,86,.45);color:var(--gold);
+             font-size:12px;display:none;align-items:center;justify-content:center;cursor:pointer;
+             z-index:10;transition:all .2s;line-height:1}
+.slot:hover .slot-remove{display:flex}
+.slot-remove:hover{background:rgba(201,162,86,.2)}
+
+/* center slot */
+.slot-center{
+  grid-column:2/4;grid-row:2/3;
+  border-style:solid;border-color:rgba(201,162,86,.4);
+  background:linear-gradient(145deg,rgba(201,162,86,.08),rgba(201,162,86,.02));
+  animation:centerGlow 4s ease-in-out infinite,slotIn .8s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes centerGlow{
+  0%,100%{box-shadow:0 0 30px rgba(201,162,86,.1)}
+  50%{box-shadow:0 0 60px rgba(201,162,86,.22),inset 0 0 30px rgba(201,162,86,.05)}
+}
+.slot-center .slot-icon{font-size:clamp(22px,2.8vw,34px);color:var(--gold)}
+.slot-center .slot-label{font-family:'Cormorant Garamond',serif;font-size:clamp(12px,1.4vw,17px);
+                           font-style:italic;color:rgba(201,162,86,.65);letter-spacing:.04em;text-transform:none}
+.slot-center:hover{transform:none}
+
+/* slot grid positions */
+.p1{grid-column:1;grid-row:1}.p2{grid-column:2;grid-row:1}.p3{grid-column:3;grid-row:1}
+.p4{grid-column:4;grid-row:1}.p5{grid-column:1;grid-row:2}.p6{grid-column:4;grid-row:2}
+.p7{grid-column:1;grid-row:3}.p8{grid-column:2;grid-row:3}.p9{grid-column:3;grid-row:3}
+.p10{grid-column:4;grid-row:3}
+
+/* ── QUESTIONS PANEL ── */
+.qp{
+  width:var(--qpw);flex-shrink:0;
+  display:flex;flex-direction:column;
+  background:linear-gradient(180deg,var(--panel2),#120e1a);
+  border-left:1px solid var(--border);
+  transition:width .4s cubic-bezier(.4,0,.2,1),transform .4s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+}
+.qp.hidden{width:0;overflow:hidden}
+
+.qp-hdr{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.qp-tag{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.75;margin-bottom:3px}
+.qp-ray-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--gold-l);line-height:1.2}
+.qp-ray-q{font-size:11px;color:var(--text-m);margin-top:5px;line-height:1.55}
+.qp-card-row{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(201,162,86,.12)}
+.qp-thumb{width:40px;height:60px;border-radius:5px;overflow:hidden;flex-shrink:0;border:1px solid rgba(201,162,86,.3);
+           display:flex;align-items:center;justify-content:center;background:var(--panel)}
+.qp-thumb svg{height:100%;width:auto;display:block}
+.qp-card-name{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold-l)}
+.qp-card-prompt{font-size:10px;color:var(--text-m);font-style:italic;margin-top:2px}
+
+.qp-body{flex:1;overflow-y:auto;padding:14px 18px 20px;scrollbar-width:thin;scrollbar-color:rgba(201,162,86,.2) transparent}
+.qp-body::-webkit-scrollbar{width:3px}
+.qp-body::-webkit-scrollbar-thumb{background:rgba(201,162,86,.2);border-radius:2px}
+
+.qp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+           height:100%;text-align:center;padding:20px}
+.qp-empty-star{font-size:36px;color:var(--gold);margin-bottom:14px;opacity:.4}
+.qp-empty-text{font-size:13px;color:var(--text-s);line-height:1.75;font-style:italic}
+
+.qp-q-block{margin-bottom:16px}
+.qp-q-num{display:flex;align-items:flex-start;gap:9px;margin-bottom:7px}
+.qp-q-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+           font-size:9px;font-weight:500;flex-shrink:0;margin-top:2px}
+.qp-q-text{font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--text);line-height:1.5}
+.qp-q-area{width:100%;min-height:68px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+            border-radius:7px;padding:9px 11px;font-family:'Jost',sans-serif;font-size:12px;color:var(--text);
+            resize:vertical;outline:none;transition:border-color .2s;line-height:1.65}
+.qp-q-area:focus{border-color:rgba(201,162,86,.38);background:rgba(255,255,255,.06)}
+.qp-q-area::placeholder{color:rgba(232,220,200,.22);font-style:italic}
+
+.qp-divider{height:1px;background:rgba(201,162,86,.1);margin:6px 0 16px}
+.qp-section-label{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-s);margin-bottom:10px}
+
+.qp-letter-area{width:100%;min-height:95px;background:rgba(201,162,86,.04);
+                 border:1px solid rgba(201,162,86,.18);border-radius:7px;padding:11px;
+                 font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--text);
+                 font-style:italic;resize:vertical;outline:none;transition:border-color .2s;line-height:1.7}
+.qp-letter-area:focus{border-color:rgba(201,162,86,.4)}
+.qp-letter-area::placeholder{color:rgba(201,162,86,.28)}
+
+/* ── FOOTER ── */
+.ftr{padding:6px 18px;border-top:1px solid var(--border);display:flex;align-items:center;
+      justify-content:space-between;background:rgba(9,8,15,.85);backdrop-filter:blur(20px);
+      flex-shrink:0;min-height:32px;gap:12px}
+.ftr p{font-size:9px;letter-spacing:.08em;color:var(--text-s)}
+.ftr-author{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.ftr-author-name{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--text-m);font-style:italic;white-space:nowrap}
+.ftr-links{display:flex;align-items:center;gap:8px}
+.ftr-link{font-size:9px;letter-spacing:.06em;color:var(--text-s);text-decoration:none;border-bottom:1px solid rgba(201,162,86,.2);padding-bottom:1px;transition:color .2s,border-color .2s;white-space:nowrap}
+.ftr-link:hover{color:var(--gold);border-color:var(--gold)}
+.ftr-sep{width:2px;height:2px;border-radius:50%;background:rgba(232,220,200,.2);flex-shrink:0}
+.hdr-author{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:16px;border:1px solid rgba(201,162,86,.18);background:rgba(201,162,86,.05);text-decoration:none;transition:all .25s;flex-shrink:0}
+.hdr-author:hover{border-color:rgba(201,162,86,.38);background:rgba(201,162,86,.1)}
+.hdr-author-name{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--gold-l);letter-spacing:.02em;white-space:nowrap}
+.hdr-author-role{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-s);margin-top:1px}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+           background:rgba(4,3,10,.9);backdrop-filter:blur(18px);opacity:0;pointer-events:none;transition:opacity .35s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{position:relative;width:min(880px,97vw);max-height:93vh;display:flex;flex-direction:column;
+        background:var(--panel);border:1px solid var(--border);border-radius:16px;
+        box-shadow:0 30px 80px rgba(0,0,0,.7);overflow:hidden;
+        transform:scale(.95) translateY(14px);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.modal-bg.open .modal{transform:scale(1) translateY(0)}
+
+.modal-hdr{padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-hdr-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.modal-ray-badge{display:inline-flex;align-items:center;gap:7px;margin-bottom:4px}
+.ray-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.modal-ray-nm{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.modal-q{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:var(--text);line-height:1.45;max-width:540px}
+.modal-close{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);
+              background:transparent;color:var(--text-m);font-size:14px;cursor:pointer;
+              display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.modal-close:hover{border-color:var(--gold);color:var(--gold-l)}
+
+.mode-tabs{display:flex;gap:6px}
+.mode-tab{flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--border);
+           background:transparent;color:var(--text-m);font-family:'Jost',sans-serif;
+           font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+           transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px}
+.mode-tab:hover{border-color:var(--gold);color:var(--gold-l);background:var(--gold-pale)}
+.mode-tab.active{border-color:var(--gold);background:rgba(201,162,86,.14);color:var(--gold-l)}
+.tab-icon{font-size:15px}.tab-sub{font-size:8px;letter-spacing:.07em;opacity:.65;margin-top:1px}
+
+.modal-body{flex:1;overflow-y:auto;padding:16px 20px;scrollbar-width:thin;scrollbar-color:rgba(201,162,86,.2) transparent}
+.modal-body::-webkit-scrollbar{width:4px}
+.modal-body::-webkit-scrollbar-thumb{background:rgba(201,162,86,.2);border-radius:2px}
+
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px}
+.shuffle-hint{text-align:center;padding:10px 0 6px;font-size:11px;letter-spacing:.1em;color:var(--text-s)}
+
+.card-item{border-radius:9px;overflow:hidden;cursor:pointer;border:2px solid transparent;
+            transition:all .25s cubic-bezier(.4,0,.2,1);aspect-ratio:2/3;position:relative}
+.card-item:hover{border-color:rgba(201,162,86,.5);transform:translateY(-4px) scale(1.04);
+                  box-shadow:0 12px 28px rgba(0,0,0,.5),0 0 18px rgba(201,162,86,.14)}
+.card-item.selected{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 8px 28px rgba(201,162,86,.28)}
+.card-item svg{width:100%;height:100%;display:block}
+.card-back{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+            background:linear-gradient(145deg,#1a1428,#0e0b18);border-radius:7px;position:relative;overflow:hidden}
+.card-back::before{content:'';position:absolute;inset:0;background:
+  repeating-linear-gradient(45deg,rgba(201,162,86,.03) 0,rgba(201,162,86,.03) 1px,transparent 1px,transparent 8px),
+  repeating-linear-gradient(-45deg,rgba(201,162,86,.03) 0,rgba(201,162,86,.03) 1px,transparent 1px,transparent 8px)}
+.card-back-inner{text-align:center;z-index:1}
+.card-back-star{font-size:22px;color:rgba(201,162,86,.55);display:block;margin-bottom:4px}
+.card-back-text{font-family:'Cormorant Garamond',serif;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:rgba(201,162,86,.38)}
+.card-item.flipping{animation:flipCard .45s ease-in-out}
+@keyframes flipCard{0%{transform:rotateY(0) scale(1.04)}50%{transform:rotateY(90deg) scale(1.06)}100%{transform:rotateY(0) scale(1)}}
+
+.modal-ftr{padding:12px 20px;border-top:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:14px}
+.preview-wrap{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.preview-card{width:48px;height:72px;border-radius:6px;overflow:hidden;flex-shrink:0;
+               border:1.5px solid rgba(201,162,86,.3);background:var(--panel2);
+               display:flex;align-items:center;justify-content:center}
+.preview-card svg{height:100%;width:auto;display:block}
+.preview-name{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold-l)}
+.preview-hint{font-size:10px;color:var(--text-m);margin-top:2px;font-style:italic}
+.preview-empty{font-size:11px;color:var(--text-s);font-style:italic}
+.place-btn{padding:10px 24px;border-radius:22px;border:1.5px solid var(--gold);
+            background:rgba(201,162,86,.14);color:var(--gold-l);font-family:'Jost',sans-serif;
+            font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;
+            transition:all .25s;flex-shrink:0}
+.place-btn:hover{background:rgba(201,162,86,.28);box-shadow:0 0 22px rgba(201,162,86,.22)}
+.place-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* ── INTRO ── */
+.intro-ov{position:fixed;inset:0;z-index:300;background:rgba(4,3,10,.97);overflow-y:auto;
+           display:flex;align-items:center;justify-content:center;transition:opacity .5s;padding:20px}
+.intro-ov.gone{opacity:0;pointer-events:none}
+.intro-box{max-width:520px;text-align:center}
+.intro-star{font-size:54px;color:var(--gold);display:block;margin-bottom:18px;animation:pulse 2s ease-in-out infinite}
+.intro-title{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:var(--gold-l);margin-bottom:8px}
+.intro-sub{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-s);margin-bottom:22px}
+.intro-text{font-size:14px;color:var(--text-m);line-height:1.85;margin-bottom:28px}
+.intro-btn{padding:13px 38px;border-radius:32px;border:1.5px solid var(--gold);
+            background:rgba(201,162,86,.12);color:var(--gold-l);font-family:'Jost',sans-serif;
+            font-size:11px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:all .3s}
+.intro-btn:hover{background:rgba(201,162,86,.24);box-shadow:0 0 28px rgba(201,162,86,.28)}
+
+/* ── INSTRUCTION MODAL ── */
+.instr-modal{max-width:660px}
+.instr-body{padding:24px 28px}
+.instr-phase{margin-bottom:26px}
+.instr-phase-hdr{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.instr-phase-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+                  justify-content:center;font-size:13px;font-weight:500;flex-shrink:0}
+.instr-phase-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold-l)}
+.instr-phase-body{font-size:13px;color:var(--text-m);line-height:1.75;padding-left:44px}
+.instr-rays{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin:16px 0 16px 44px}
+.instr-ray{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-m)}
+.instr-ray-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.instr-ray-name{font-weight:500;color:var(--text)}
+.instr-tip{background:rgba(201,162,86,.07);border:1px solid rgba(201,162,86,.2);border-radius:8px;
+            padding:14px 18px;margin:10px 0 0 44px;font-size:12px;color:var(--text-m);line-height:1.7}
+.instr-tip strong{color:var(--gold-l);font-weight:500}
+.instr-divider{height:1px;background:rgba(201,162,86,.12);margin:0 0 22px 0}
+
+/* ── SAVE MODAL ── */
+.save-raw{width:100%;min-height:300px;background:rgba(255,255,255,.04);border:1px solid var(--border);
+           border-radius:7px;padding:13px;font-family:'Jost',sans-serif;font-size:11px;color:var(--text);
+           resize:vertical;outline:none;line-height:1.75}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:48px;left:50%;transform:translateX(-50%) translateY(8px);
+        background:var(--panel2);border:1px solid var(--border);border-radius:24px;
+        padding:8px 22px;font-size:11px;color:var(--text-m);opacity:0;transition:all .4s;
+        pointer-events:none;z-index:200;backdrop-filter:blur(20px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── MOBILE ── */
+@media(max-width:700px){
+  :root{--qpw:100%}
+  html,body{overflow:hidden}
+  .app{height:100dvh}
+  .hdr{padding:8px 12px;min-height:50px}
+  .hdr-sub{display:none}
+  .hdr-title{font-size:18px}
+  .hdr-star{font-size:17px}
+  .btn{font-size:9px;padding:5px 10px}
+  .counter{display:none}
+  .app-body{flex-direction:column;overflow:hidden}
+  .field-panel{flex:none;height:56dvh;position:relative}
+  .field{inset:7px 8px 5px 8px;gap:5px}
+  .slot-label{font-size:clamp(7px,2.2vw,10px);letter-spacing:.06em}
+  .slot-center .slot-label{font-size:clamp(11px,3.5vw,14px)}
+  .slot-center .slot-icon{font-size:clamp(18px,5vw,26px)}
+  /* QP as bottom drawer */
+  .qp{
+    width:100% !important;
+    flex:1;
+    border-left:none;
+    border-top:1px solid var(--border);
+    overflow:hidden;
+  }
+  .qp.hidden{
+    width:100% !important;
+    height:0;flex:none;
+    border:none;
+    overflow:hidden;
+  }
+  .qp-hdr{padding:12px 14px 10px}
+  .qp-ray-name{font-size:18px}
+  .qp-body{padding:12px 14px 16px}
+  .qp-q-text{font-size:14px}
+  .qp-q-area{font-size:12px;min-height:56px}
+  .qp-letter-area{font-size:14px;min-height:72px}
+  .ftr{display:none}
+  .modal{width:100vw;max-height:92dvh;border-radius:14px 14px 0 0;position:fixed;bottom:0;left:0;right:0;top:auto}
+  .modal-bg{align-items:flex-end}
+  .modal-bg.open .modal{transform:scale(1) translateY(0)}
+  .modal-bg .modal{transform:translateY(100%)}
+  .cards-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:7px}
+  .shuffle-hint{font-size:10px;padding:8px 0 4px}
+  .instr-rays{grid-template-columns:1fr;gap:8px}
+  .instr-body{padding:16px 18px}
+  .instr-phase-body{padding-left:0}
+  .instr-rays{margin-left:0}
+  .instr-tip{margin-left:0}
+  /* Mobile step-by-step questions */
+  .mob-step{display:flex;flex-direction:column;height:100%}
+  .mob-step-progress{display:flex;gap:5px;padding:10px 16px 0;flex-shrink:0}
+  .mob-step-pip{flex:1;height:3px;border-radius:2px;background:rgba(201,162,86,.18);transition:background .3s}
+  .mob-step-pip.done{background:rgba(201,162,86,.7)}
+  .mob-step-pip.active{background:var(--gold)}
+  .mob-step-body{flex:1;overflow-y:auto;padding:14px 16px 8px;display:flex;flex-direction:column}
+  .mob-step-tag{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:8px}
+  .mob-step-q{font-family:'Cormorant Garamond',serif;font-size:19px;font-style:italic;color:var(--text);line-height:1.55;margin-bottom:14px;flex-shrink:0}
+  .mob-step-area{width:100%;flex:1;min-height:120px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;font-family:'Jost',sans-serif;font-size:15px;color:var(--text);resize:none;outline:none;line-height:1.7;-webkit-appearance:none}
+  .mob-step-area:focus{border-color:rgba(201,162,86,.4);background:rgba(255,255,255,.07)}
+  .mob-step-area::placeholder{color:rgba(232,220,200,.25);font-style:italic}
+  .mob-step-letter-area{width:100%;flex:1;min-height:120px;background:rgba(201,162,86,.05);border:1px solid rgba(201,162,86,.2);border-radius:10px;padding:12px 14px;font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--text);resize:none;outline:none;line-height:1.7;font-style:italic;-webkit-appearance:none}
+  .mob-step-letter-area:focus{border-color:rgba(201,162,86,.45)}
+  .mob-step-letter-area::placeholder{color:rgba(201,162,86,.3)}
+  .mob-step-nav{display:flex;gap:10px;padding:10px 16px 14px;flex-shrink:0;align-items:center}
+  .mob-step-back{width:44px;height:44px;border-radius:50%;border:1px solid rgba(201,162,86,.25);background:transparent;color:var(--text-m);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s}
+  .mob-step-back:disabled{opacity:.2;cursor:default}
+  .mob-step-back:not(:disabled):active{background:rgba(201,162,86,.1)}
+  .mob-step-next{flex:1;height:44px;border-radius:22px;border:1.5px solid var(--gold);background:rgba(201,162,86,.12);color:var(--gold-l);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+  .mob-step-next:active{background:rgba(201,162,86,.25)}
+  .mob-step-counter{font-size:10px;color:var(--text-s);white-space:nowrap;flex-shrink:0}
+  .mob-qp-hdr{padding:10px 16px 8px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px}
+  .mob-qp-ray-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;flex:1}
+  .mob-qp-card-thumb{width:32px;height:48px;border-radius:4px;overflow:hidden;border:1px solid rgba(201,162,86,.3);background:var(--panel);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .mob-qp-card-thumb svg{height:100%;width:auto;display:block}
+}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="neb neb1"></div><div class="neb neb2"></div>
+
+<!-- INTRO -->
+<div class="intro-ov" id="introOv">
+  <div class="intro-box">
+    <span class="intro-star">✦</span>
+    <div class="intro-title">Я — <em>Звезда</em></div>
+    <div class="intro-sub">Упражнение с метафорическими картами</div>
+    <p class="intro-text">
+      Перед вами — звезда из десяти лучей.<br>
+      Каждый луч — отдельный аспект вашей личности.<br>
+      Нажмите на любой луч, выберите карту —<br>
+      ту, что откликнется — и исследуйте,<br>
+      что она говорит вам о себе.<br><br>
+      <em>Начните с центра — кто я сейчас?</em>
+    </p>
+    <button class="intro-btn" onclick="startEx()">Начать упражнение ✦</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+  <header class="hdr">
+    <div class="hdr-brand">
+      <div class="hdr-star">✦</div>
+      <div>
+        <div class="hdr-title">Я — <em>Звезда</em></div>
+        <div class="hdr-sub">Метафорические карты · Самооценка</div>
+      </div>
+      <a class="hdr-author" href="https://vasilevagalina.ru" target="_blank">
+        <div>
+          <div class="hdr-author-name">Галина Васильева</div>
+          <div class="hdr-author-role">Психолог</div>
+        </div>
+      </a>
+    </div>
+    <div class="hdr-right">
+      <span class="counter" id="ctr">0 / 11</span>
+      <button class="btn" onclick="openInstr()">Инструкция</button>
+      <button class="btn btn-gold" onclick="openSave()">Сохранить</button>
+      <button class="btn" onclick="toggleQP()">Вопросы ✦</button>
+      <button class="btn" onclick="clearAll()">✕</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <!-- FIELD -->
+    <div class="field-panel">
+      <canvas id="raysCanvas"></canvas>
+      <div class="field" id="field">
+        <div class="slot p1" data-ray="1" style="--i:1" onclick="openPicker(this)">
+          <div class="slot-icon">◈</div><div class="slot-label">Сила</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+        <div class="slot p2" data-ray="2" style="--i:2" onclick="openPicker(this)">
+          <div class="slot-icon">◈</div><div class="slot-label">Достижения</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+        <div class="slot p3" data-ray="3" style="--i:3" onclick="openPicker(this)">
+          <div class="slot-icon">◈</div><div class="slot-label">Уникальность</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+        <div class="slot p4" data-ray="4" style="--i:4" onclick="openPicker(this)">
+          <div class="slot-icon">◈</div><div class="slot-label">Ценности</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+        <div class="slot p5" data-ray="5" style="--i:5" onclick="openPicker(this)">
+          <div class="slot-icon">◈</div><div class="slot-label">Жизненность</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+        <div class="slot slot-center" data-ray="0" style="--i:6" onclick="openPicker(this)">
+          <div class="slot-icon">✦</div><div class="slot-label">Я сейчас</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+        <div class="slot p6" data-ray="6" style="--i:7" onclick="openPicker(this)">
+          <div class="slot-icon">◈</div><div class="slot-label">Опора</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+        <div class="slot p7" data-ray="7" style="--i:8" onclick="openPicker(this)">
+          <div class="slot-icon">◈</div><div class="slot-label">Дар</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+        <div class="slot p8" data-ray="8" style="--i:9" onclick="openPicker(this)">
+          <div class="slot-icon">◈</div><div class="slot-label">Будущее «я»</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+        <div class="slot p9" data-ray="9" style="--i:10" onclick="openPicker(this)">
+          <div class="slot-icon">◈</div><div class="slot-label">Принятие</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+        <div class="slot p10" data-ray="10" style="--i:11" onclick="openPicker(this)">
+          <div class="slot-icon">◈</div><div class="slot-label">Послание</div>
+          <button class="slot-remove" onclick="rmCard(event,this)">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUESTIONS PANEL -->
+    <div class="qp" id="qp">
+      <div class="qp-hdr" id="qpHdr">
+        <div class="qp-tag">Вопросы для размышления</div>
+        <div class="qp-ray-name" id="qpRayName">Выберите луч</div>
+        <div class="qp-ray-q" id="qpRayQ"></div>
+        <div class="qp-card-row" id="qpCardRow" style="display:none">
+          <div class="qp-thumb" id="qpThumb"></div>
+          <div>
+            <div class="qp-card-name" id="qpCardName"></div>
+            <div class="qp-card-prompt" id="qpCardPrompt"></div>
+          </div>
+        </div>
+      </div>
+      <div class="qp-body" id="qpBody">
+        <div class="qp-empty">
+          <div class="qp-empty-star">✦</div>
+          <div class="qp-empty-text">Нажмите на любой луч,<br>чтобы увидеть вопросы<br>для размышления</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="ftr">
+    <p>Нажмите на луч ✦ Выберите карту ✦ Ответьте на вопросы</p>
+    <div class="ftr-author">
+      <span class="ftr-author-name">Галина Васильева</span>
+      <div class="ftr-links">
+        <a class="ftr-link" href="https://vasilevagalina.ru" target="_blank">vasilevagalina.ru</a>
+        <div class="ftr-sep"></div>
+        <a class="ftr-link" href="tel:+79213807082">+7 921 380-70-82</a>
+      </div>
+    </div>
+    <p id="ftrCount">Карт размещено: 0 из 11</p>
+  </footer>
+</div>
+
+<!-- SAVE MODAL -->
+<div class="modal-bg" id="saveBg">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-hdr">
+      <div class="modal-hdr-top">
+        <div>
+          <div class="modal-ray-badge"><div class="ray-dot" style="background:#c9a256"></div><span class="modal-ray-nm">Сохранить ответы</span></div>
+          <div class="modal-q">Ваши записи по всем лучам звезды</div>
+        </div>
+        <button class="modal-close" onclick="closeSave()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="saveBody" style="padding:18px 22px"></div>
+    <div class="modal-ftr" style="gap:10px;flex-wrap:wrap">
+      <div style="flex:1;font-size:8.5px;color:var(--text-s);font-style:italic">Скопируйте текст или скачайте файл</div>
+      <button class="btn" onclick="copyText()">📋 Копировать текст</button>
+      <button class="place-btn" onclick="downloadTxt()">⬇ Скачать .txt</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSTRUCTION MODAL -->
+<div class="modal-bg" id="instrBg">
+  <div class="modal instr-modal">
+    <div class="modal-hdr">
+      <div class="modal-hdr-top">
+        <div>
+          <div class="modal-ray-badge"><div class="ray-dot" style="background:#c9a256"></div><span class="modal-ray-nm">Как работать с упражнением</span></div>
+          <div class="modal-q">Я — Звезда · Подробная инструкция</div>
+        </div>
+        <button class="modal-close" onclick="closeInstr()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body instr-body">
+
+      <div class="instr-phase">
+        <div class="instr-phase-hdr">
+          <div class="instr-phase-num" style="background:rgba(201,162,86,.12);color:#c9a256;border:1px solid rgba(201,162,86,.3)">1</div>
+          <div class="instr-phase-title">Настройтесь и сделайте несколько вдохов</div>
+        </div>
+        <div class="instr-phase-body">
+          Перед началом возьмите паузу на 1–2 минуты. Закройте глаза, почувствуйте своё тело, отпустите мысли о делах. Упражнение работает глубже, когда вы в состоянии покоя, а не спешки. Не нужно знать «правильных» ответов — здесь их нет.
+        </div>
+      </div>
+      <div class="instr-divider"></div>
+
+      <div class="instr-phase">
+        <div class="instr-phase-hdr">
+          <div class="instr-phase-num" style="background:rgba(123,150,184,.12);color:#7b96b8;border:1px solid rgba(123,150,184,.3)">2</div>
+          <div class="instr-phase-title">Изучите звезду — 11 лучей вашей личности</div>
+        </div>
+        <div class="instr-phase-body">
+          Центр звезды — это «Я сейчас». Вокруг него расположены 10 лучей, каждый отражает важный аспект вашей личности:
+        </div>
+        <div class="instr-rays">
+          <div class="instr-ray"><div class="instr-ray-dot" style="background:#b8924a"></div><div><span class="instr-ray-name">Сила</span> — ваши ресурсы и таланты</div></div>
+          <div class="instr-ray"><div class="instr-ray-dot" style="background:#7b96b8"></div><div><span class="instr-ray-name">Достижения</span> — чем вы гордитесь</div></div>
+          <div class="instr-ray"><div class="instr-ray-dot" style="background:#a87aa0"></div><div><span class="instr-ray-name">Уникальность</span> — что делает вас особенным</div></div>
+          <div class="instr-ray"><div class="instr-ray-dot" style="background:#7a9e7e"></div><div><span class="instr-ray-name">Ценности</span> — что для вас по-настоящему важно</div></div>
+          <div class="instr-ray"><div class="instr-ray-dot" style="background:#c47a5a"></div><div><span class="instr-ray-name">Жизненность</span> — что наполняет вас энергией</div></div>
+          <div class="instr-ray"><div class="instr-ray-dot" style="background:#7a9e7e"></div><div><span class="instr-ray-name">Опора</span> — на что и кого вы опираетесь</div></div>
+          <div class="instr-ray"><div class="instr-ray-dot" style="background:#b8924a"></div><div><span class="instr-ray-name">Дар</span> — что вы несёте в мир</div></div>
+          <div class="instr-ray"><div class="instr-ray-dot" style="background:#7b96b8"></div><div><span class="instr-ray-name">Будущее «я»</span> — кем вы хотите стать</div></div>
+          <div class="instr-ray"><div class="instr-ray-dot" style="background:#a87aa0"></div><div><span class="instr-ray-name">Принятие</span> — что вы принимаете в себе</div></div>
+          <div class="instr-ray"><div class="instr-ray-dot" style="background:#c9a256"></div><div><span class="instr-ray-name">Послание</span> — что звезда говорит о вашей ценности</div></div>
+        </div>
+      </div>
+      <div class="instr-divider"></div>
+
+      <div class="instr-phase">
+        <div class="instr-phase-hdr">
+          <div class="instr-phase-num" style="background:rgba(168,122,160,.12);color:#a87aa0;border:1px solid rgba(168,122,160,.3)">3</div>
+          <div class="instr-phase-title">Выберите карту для каждого луча</div>
+        </div>
+        <div class="instr-phase-body">
+          Нажмите на любой луч — откроется окно выбора карты. Вы можете работать в двух режимах:<br><br>
+          <strong style="color:var(--gold-l)">🂠 Закрытые карты</strong> — карты лежат рубашкой вверх. Выберите ту, к которой тянется рука — не думая. Это режим интуиции и доверия себе.<br><br>
+          <strong style="color:var(--gold-l)">✦ Открытые карты</strong> — все карты видны. Рассмотрите их и выберите ту, что наиболее точно откликается на тему луча. Это режим осознанного выбора.
+        </div>
+        <div class="instr-tip">
+          <strong>Совет:</strong> Не анализируйте слишком долго. Первый импульс — самый честный. Если несколько карт одновременно притягивают — отметьте это, это тоже информация.
+        </div>
+      </div>
+      <div class="instr-divider"></div>
+
+      <div class="instr-phase">
+        <div class="instr-phase-hdr">
+          <div class="instr-phase-num" style="background:rgba(122,158,126,.12);color:#7a9e7e;border:1px solid rgba(122,158,126,.3)">4</div>
+          <div class="instr-phase-title">Исследуйте каждую карту через вопросы</div>
+        </div>
+        <div class="instr-phase-body">
+          После размещения карты справа откроется панель с 6 вопросами для размышления. Отвечайте письменно — это важно. Письмо замедляет и углубляет процесс. Не нужно отвечать на все вопросы — выбирайте те, что резонируют.<br><br>
+          В конце каждого луча есть поле <em>«Послание себе»</em> — напишите несколько слов или предложение от первого лица, которое вы хотите сохранить.
+        </div>
+        <div class="instr-tip">
+          <strong>Важно:</strong> Если какой-то вопрос вызывает сопротивление или дискомфорт — это сигнал. Именно там может быть что-то важное. Позвольте себе остановиться на этом чуть дольше.
+        </div>
+      </div>
+      <div class="instr-divider"></div>
+
+      <div class="instr-phase">
+        <div class="instr-phase-hdr">
+          <div class="instr-phase-num" style="background:rgba(196,122,90,.12);color:#c47a5a;border:1px solid rgba(196,122,90,.3)">5</div>
+          <div class="instr-phase-title">Завершите и сохраните</div>
+        </div>
+        <div class="instr-phase-body">
+          Когда все 11 лучей заполнены, взгляните на звезду целиком. Что вы замечаете? Какие лучи заполнились легко, а какие вызвали затруднение? Есть ли связи между картами?<br><br>
+          Нажмите <strong style="color:var(--gold-l)">«Сохранить»</strong> — вы сможете скопировать все ваши ответы в текст или скачать файл. Сохраните его как памятку о себе.
+        </div>
+        <div class="instr-tip">
+          <strong>После упражнения:</strong> Перечитайте ваши послания себе по каждому лучу. Выберите одно слово или фразу, которая стала главным открытием сегодня. Это и есть ваш ресурс на сейчас.
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-ftr">
+      <div style="flex:1;font-size:11px;color:var(--text-s);font-style:italic">Начните с центра — «Я сейчас» ✦</div>
+      <button class="place-btn" onclick="closeInstr()">Начать работу ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- PICKER MODAL -->
+<div class="modal-bg" id="mBg">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-hdr-top">
+        <div>
+          <div class="modal-ray-badge">
+            <div class="ray-dot" id="mDot"></div>
+            <span class="modal-ray-nm" id="mRayNm"></span>
+          </div>
+          <div class="modal-q" id="mQ"></div>
+        </div>
+        <button class="modal-close" onclick="closePicker()">✕</button>
+      </div>
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="tabC" onclick="setMode('closed')">
+          <span class="tab-icon">🂠</span>
+          <div><div>Закрытые карты</div><div class="tab-sub">Выберите вслепую — доверьтесь интуиции</div></div>
+        </button>
+        <button class="mode-tab" id="tabO" onclick="setMode('open')">
+          <span class="tab-icon">✦</span>
+          <div><div>Открытые карты</div><div class="tab-sub">Рассмотрите все и выберите осознанно</div></div>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+    <div class="modal-ftr">
+      <div class="preview-wrap">
+        <div class="preview-card" id="prevCard"></div>
+        <div id="prevInfo"><div class="preview-empty">Выберите карту выше</div></div>
+      </div>
+      <button class="place-btn" id="placeBtn" onclick="placeCard()" disabled>Положить ✦</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STARS ────────────────────────────────────────────────────────────────────
+const cv=document.getElementById('stars'),ctx=cv.getContext('2d');let stars=[];
+function rsz(){
+  cv.width=innerWidth;cv.height=innerHeight;stars=[];
+  const n=Math.floor(innerWidth*innerHeight/5500);
+  for(let i=0;i<n;i++) stars.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.2+.3,a:Math.random(),sp:Math.random()*.003+.001,ph:Math.random()*Math.PI*2});
+}
+function drs(t){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  stars.forEach(s=>{const a=s.a*(0.3+0.7*Math.sin(t*s.sp+s.ph));ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(201,178,135,${a})`;ctx.fill();});
+  requestAnimationFrame(drs);
+}
+window.addEventListener('resize',()=>{rsz();drawRays();});
+rsz();requestAnimationFrame(drs);
+
+// ── RAYS CANVAS ──────────────────────────────────────────────────────────────
+const raysCanvas=document.getElementById('raysCanvas');
+const rctx=raysCanvas.getContext('2d');
+
+// slot center positions in grid: [col, row] (1-based, col spans for center)
+// grid is 4 cols x 3 rows
+// slots: p1(1,1) p2(2,1) p3(3,1) p4(4,1) p5(1,2) center(2-3,2) p6(4,2) p7(1,3) p8(2,3) p9(3,3) p10(4,3)
+function getSlotCenters(){
+  const field=document.getElementById('field');
+  const slots=field.querySelectorAll('.slot');
+  const centers={};
+  slots.forEach(s=>{
+    const rn=parseInt(s.dataset.ray);
+    const r=s.getBoundingClientRect();
+    const fr=field.getBoundingClientRect();
+    centers[rn]={x:r.left+r.width/2-fr.left, y:r.top+r.height/2-fr.top};
+  });
+  return centers;
+}
+
+function drawRays(){
+  const field=document.getElementById('field');
+  const fr=field.getBoundingClientRect();
+  raysCanvas.width=fr.width;
+  raysCanvas.height=fr.height;
+  raysCanvas.style.left=fr.left-field.closest('.field-panel').getBoundingClientRect().left+'px';
+  raysCanvas.style.top=fr.top-field.closest('.field-panel').getBoundingClientRect().top+'px';
+  raysCanvas.style.width=fr.width+'px';
+  raysCanvas.style.height=fr.height+'px';
+
+  const centers=getSlotCenters();
+  const c0=centers[0]; // center slot
+  if(!c0) return;
+
+  const rayColors={1:'#b8924a',2:'#7b96b8',3:'#a87aa0',4:'#7a9e7e',5:'#c47a5a',
+                    6:'#7a9e7e',7:'#b8924a',8:'#7b96b8',9:'#a87aa0',10:'#c9a256'};
+
+  rctx.clearRect(0,0,raysCanvas.width,raysCanvas.height);
+
+  for(let rn=1;rn<=10;rn++){
+    const cp=centers[rn];
+    if(!cp) continue;
+    const col=rayColors[rn];
+
+    // gradient line
+    const grad=rctx.createLinearGradient(c0.x,c0.y,cp.x,cp.y);
+    grad.addColorStop(0,col+'88');
+    grad.addColorStop(0.5,col+'44');
+    grad.addColorStop(1,col+'22');
+
+    rctx.beginPath();
+    rctx.moveTo(c0.x,c0.y);
+    rctx.lineTo(cp.x,cp.y);
+    rctx.strokeStyle=grad;
+    rctx.lineWidth=1.5;
+    rctx.setLineDash([4,6]);
+    rctx.lineDashOffset=0;
+    rctx.stroke();
+    rctx.setLineDash([]);
+
+    // dot at outer end
+    rctx.beginPath();
+    rctx.arc(cp.x,cp.y,3,0,Math.PI*2);
+    rctx.fillStyle=col+'66';
+    rctx.fill();
+  }
+
+  // center glow dot
+  rctx.beginPath();
+  rctx.arc(c0.x,c0.y,6,0,Math.PI*2);
+  const cg=rctx.createRadialGradient(c0.x,c0.y,0,c0.x,c0.y,6);
+  cg.addColorStop(0,'rgba(201,162,86,.6)');
+  cg.addColorStop(1,'rgba(201,162,86,0)');
+  rctx.fillStyle=cg;
+  rctx.fill();
+}
+
+// draw rays after layout settles
+setTimeout(drawRays,200);
+window.addEventListener('resize',drawRays);
+
+const RAYS = {
+  0:{name:"Я сейчас", color:"#c9a256",
+     questions:[
+       "Какая карта похожа на вас прямо сейчас? Что первым бросилось в глаза?",
+       "Что в этом образе говорит о вашем состоянии сегодня?",
+       "Если бы эта карта могла говорить — что бы она сказала о вас?",
+       "Где в теле вы чувствуете отклик, когда смотрите на неё?",
+       "Какое слово, цвет или ощущение приходит первым — не думая?",
+       "Что в этой карте вас удивляет? Что кажется неожиданным?",
+     ]},
+  1:{name:"Сила", color:"#b8924a",
+     questions:[
+       "Что вы видите на этой карте, что говорит о вашей силе?",
+       "Вспомните момент, когда вы справились с чем-то очень сложным. Как вы это сделали?",
+       "Когда люди обращаются к вам за помощью — о чём чаще всего просят?",
+       "Что вы делаете легко и естественно, а другие говорят: «Как ты так умеешь?»",
+       "Какое качество помогает вам снова и снова — даже когда всё идёт не так?",
+       "Если бы эта карта называла вашу главную силу — как бы она её назвала?",
+     ]},
+  2:{name:"Достижения", color:"#7b96b8",
+     questions:[
+       "Что в этой карте напоминает вам о том, чего вы достигли?",
+       "Чем вы гордитесь — даже если никто этого не видел?",
+       "Что вы преодолели внутри себя за последние несколько лет?",
+       "Расскажите про момент, когда вы удивили сами себя.",
+       "Что вы сделали вопреки страху, сомнению или чужому мнению?",
+       "Если бы ребёнок внутри вас мог видеть, кем вы стали — что бы он почувствовал?",
+     ]},
+  3:{name:"Уникальность", color:"#a87aa0",
+     questions:[
+       "Что в этой карте отражает что-то особенное в вас?",
+       "Как близкие люди описывают вас — не вашу роль, а именно вас?",
+       "Что в вас иногда раздражает других — и одновременно является вашей силой?",
+       "Если бы мир потерял именно вас — что бы исчезло вместе с вами?",
+       "Что вы приносите в комнату просто своим присутствием?",
+       "Если бы вы были персонажем книги — какие три черты автор написал бы первыми?",
+     ]},
+  4:{name:"Ценности", color:"#7a9e7e",
+     questions:[
+       "Что в этой карте говорит о том, что для вас важно?",
+       "Когда вам было больно от чужого поступка — какую вашу ценность это задело?",
+       "О чём вы не можете молчать, даже если это неудобно?",
+       "Если бы пришлось выбирать между успехом и честностью — что бы вы выбрали? Почему?",
+       "Вспомните решение, которым вы гордитесь несмотря на цену. Что им двигало?",
+       "Что вы никогда не предадите — ни ради денег, ни ради одобрения?",
+     ]},
+  5:{name:"Жизненность", color:"#c47a5a",
+     questions:[
+       "Что в этой карте связано с тем, что даёт вам жизнь?",
+       "Когда время перестаёт существовать — вы полностью в процессе?",
+       "Что вы делали в детстве, от чего горели глаза?",
+       "Расскажите о последнем моменте настоящей радости — не «должна радоваться», а настоящей.",
+       "Что даёт вам ощущение, что жизнь стоит того, чтобы жить?",
+       "Если бы у вас было три месяца полной свободы — что бы вы делали?",
+     ]},
+  6:{name:"Опора", color:"#7a9e7e",
+     questions:[
+       "Что в этой карте напоминает вам о том, на что вы можете опереться?",
+       "Что помогало вам в самые тёмные или трудные периоды?",
+       "Есть ли место, образ или воспоминание, где вы чувствуете себя в безопасности?",
+       "Если бы внутри вас жил мудрый союзник — что бы он сказал прямо сейчас?",
+       "Кто верил в вас, когда вы сами в себя не верили?",
+       "Что вы говорите себе, когда совсем трудно — и это помогает?",
+     ]},
+  7:{name:"Дар", color:"#b8924a",
+     questions:[
+       "Что в этой карте говорит о том, что вы несёте в мир?",
+       "За что вас благодарили — искренне, не из вежливости?",
+       "Что меняется в людях или пространстве, когда вы рядом?",
+       "Какой след вы хотите оставить — в людях, в мире, в близких?",
+       "Если бы ваша жизнь была посланием — о чём бы оно было?",
+       "Что вы даёте другим, даже не замечая этого?",
+     ]},
+  8:{name:"Будущее «я»", color:"#7b96b8",
+     questions:[
+       "Что в этой карте говорит об образе себя, к которому вы идёте?",
+       "Опишите себя через 5 лет — не события, а ощущение себя изнутри.",
+       "Что нужно отпустить, чтобы стать собой в полной мере?",
+       "Что уже есть в вас от этого будущего образа прямо сейчас?",
+       "Какой один маленький шаг к этому образу вы могли бы сделать уже сегодня?",
+       "Каким вы хотите, чтобы вас помнили люди, которых вы любите?",
+     ]},
+  9:{name:"Принятие", color:"#a87aa0",
+     questions:[
+       "Что в этой карте говорит о том, что вы готовы принять в себе?",
+       "Что вы долго скрывали от других — или от себя?",
+       "Какая ваша черта казалась слабостью — но на самом деле защищала вас?",
+       "Что внутренний критик говорит чаще всего? Откуда этот голос?",
+       "Если бы вы могли обнять ту часть себя, которую отвергаете — что бы вы ей сказали?",
+       "Что в себе вы могли бы назвать сложным, но своим?",
+     ]},
+ 10:{name:"Послание", color:"#c9a256",
+     questions:[
+       "Что звезда хочет сказать вам о вашей ценности?",
+       "Если бы эта карта знала о вас всё — что бы она написала на открытке?",
+       "Что вы хотели бы услышать от близкого человека о себе — но никогда не слышали?",
+       "Что вы, наконец, позволяете себе знать о себе после этой работы?",
+       "Какое одно слово или образ вы возьмёте с собой из сегодняшней сессии?",
+       "Напишите послание себе от первого лица, начав словами: «Я — это...»",
+     ]},
+};
+
+const CARDS = [
+  {id:1, name:`Маяк`, prompt:`Что освещает мой путь в темноте?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c1a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0d1a2e"/><stop offset="100%" stop-color="#1a2a1a"/></linearGradient><radialGradient id="c1b" cx="60" cy="52" r="35" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#f5d060" stop-opacity=".5"/><stop offset="100%" stop-color="#f5d060" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c1a)"/>
+<ellipse cx="60" cy="152" rx="55" ry="10" fill="#0a1a28" opacity=".6"/>
+<path d="M0 140 Q30 133 60 140 Q90 147 120 140 L120 162 L0 162Z" fill="#0e2040" opacity=".75"/>
+<circle cx="60" cy="52" r="28" fill="url(#c1b)"/>
+<g opacity=".35" stroke="#f5d060" stroke-width=".7"><line x1="60" y1="52" x2="8" y2="18"/><line x1="60" y1="52" x2="0" y2="52"/><line x1="60" y1="52" x2="112" y2="18"/><line x1="60" y1="52" x2="120" y2="52"/><line x1="60" y1="52" x2="32" y2="8"/><line x1="60" y1="52" x2="88" y2="8"/></g>
+<rect x="50" y="78" width="20" height="58" rx="3" fill="#c8b08a"/>
+<rect x="50" y="90" width="20" height="4" fill="#c04040" opacity=".6"/>
+<rect x="50" y="105" width="20" height="4" fill="#c04040" opacity=".6"/>
+<rect x="47" y="70" width="26" height="10" rx="2" fill="#e0c88a"/>
+<rect x="52" y="60" width="16" height="11" rx="2" fill="#e8d080"/>
+<ellipse cx="60" cy="58" rx="7" ry="5" fill="#f5e060" opacity=".9"/>
+<ellipse cx="60" cy="58" rx="3.5" ry="2.5" fill="#fff" opacity=".8"/>
+<rect x="44" y="134" width="32" height="5" rx="2" fill="#a09070"/>
+<circle cx="20" cy="22" r="1" fill="white" opacity=".6"/><circle cx="95" cy="14" r="1.2" fill="white" opacity=".7"/><circle cx="14" cy="58" r=".8" fill="white" opacity=".5"/><circle cx="100" cy="44" r="1" fill="white" opacity=".6"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Маяк</text></svg>`},
+  {id:2, name:`Корни`, prompt:`Откуда я черпаю силу?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c2a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a1f0a"/><stop offset="60%" stop-color="#1a2e10"/><stop offset="100%" stop-color="#2a1a08"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c2a)"/>
+<path d="M0 112 Q60 105 120 112" stroke="#5a3a18" stroke-width="1.5" fill="none"/>
+<rect x="0" y="112" width="120" height="50" fill="#2a1808" opacity=".7"/>
+<g stroke="#8a5a28" stroke-width="1.5" fill="none" opacity=".85">
+<path d="M58 112 Q45 122 30 130 Q20 136 10 143"/><path d="M60 112 Q55 125 48 135 Q42 146 38 156"/><path d="M62 112 Q70 123 78 132 Q85 140 80 153"/><path d="M60 112 Q75 119 90 125 Q100 130 108 140"/><path d="M58 112 Q50 117 42 115 Q35 113 25 117"/><path d="M62 112 Q68 115 78 112 Q88 109 95 113"/>
+</g>
+<g stroke="#6a4018" stroke-width=".8" fill="none" opacity=".6"><path d="M30 130 Q22 138 18 148"/><path d="M78 132 Q88 140 92 150"/></g>
+<path d="M54 18 Q50 42 52 72 Q54 92 58 112" stroke="#5a3818" stroke-width="7" fill="none" stroke-linecap="round"/>
+<path d="M66 18 Q70 42 68 72 Q66 92 62 112" stroke="#5a3818" stroke-width="7" fill="none" stroke-linecap="round"/>
+<path d="M54 18 Q60 16 66 18 Q68 58 66 112 Q63 112 60 112 Q57 112 54 112 Q52 58 54 18Z" fill="#6a4020"/>
+<g stroke="#4a3010" stroke-width="3" fill="none" stroke-linecap="round">
+<path d="M58 52 Q40 40 25 28"/><path d="M60 42 Q78 28 90 16"/><path d="M57 68 Q42 58 30 50"/><path d="M63 63 Q80 53 95 46"/>
+</g>
+<ellipse cx="22" cy="25" rx="12" ry="8" fill="#2a6020" opacity=".8" transform="rotate(-20,22,25)"/>
+<ellipse cx="92" cy="13" rx="10" ry="7" fill="#2a6820" opacity=".75" transform="rotate(15,92,13)"/>
+<ellipse cx="27" cy="46" rx="9" ry="6" fill="#225818" opacity=".75" transform="rotate(-30,27,46)"/>
+<ellipse cx="96" cy="42" rx="10" ry="7" fill="#286020" opacity=".75" transform="rotate(25,96,42)"/>
+<ellipse cx="56" cy="10" rx="11" ry="7" fill="#2a7020" opacity=".8" transform="rotate(-5,56,10)"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Корни</text></svg>`},
+  {id:3, name:`Птица`, prompt:`К чему я стремлюсь?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c3a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08101e"/><stop offset="50%" stop-color="#102040"/><stop offset="100%" stop-color="#1a1428"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c3a)"/>
+<ellipse cx="60" cy="108" rx="70" ry="22" fill="#e06020" opacity=".12"/>
+<path d="M20 72 Q35 57 60 65 Q85 57 100 72 Q85 69 60 75 Q35 69 20 72Z" fill="white" opacity=".9"/>
+<path d="M55 65 Q58 77 60 75 Q62 77 65 65" fill="white" opacity=".9"/>
+<path d="M15 48 Q20 43 25 48 Q20 46 15 48Z" fill="white" opacity=".4"/>
+<path d="M88 38 Q93 34 98 38 Q93 36 88 38Z" fill="white" opacity=".35"/>
+<path d="M70 53 Q74 49 78 53 Q74 51 70 53Z" fill="white" opacity=".3"/>
+<path d="M40 82 Q44 78 48 82 Q44 80 40 82Z" fill="white" opacity=".25"/>
+<circle cx="30" cy="18" r="1" fill="white" opacity=".7"/><circle cx="80" cy="10" r="1.2" fill="white" opacity=".8"/><circle cx="10" cy="33" r=".8" fill="white" opacity=".5"/><circle cx="105" cy="26" r="1" fill="white" opacity=".6"/><circle cx="55" cy="13" r=".7" fill="white" opacity=".5"/>
+<path d="M95 23 Q88 30 90 40 Q96 34 98 26 Q97 23 95 23Z" fill="white" opacity=".65"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Птица</text></svg>`},
+  {id:4, name:`Дверь`, prompt:`Что открывается передо мной?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c4a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#180e28"/><stop offset="100%" stop-color="#0e1820"/></linearGradient><radialGradient id="c4b" cx="60" cy="88" r="40" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#f0d080" stop-opacity=".4"/><stop offset="100%" stop-color="#f0d080" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c4a)"/>
+<ellipse cx="60" cy="93" rx="38" ry="48" fill="url(#c4b)"/>
+<rect x="28" y="36" width="64" height="102" rx="32" fill="#3a2a18"/>
+<rect x="30" y="38" width="60" height="98" rx="30" fill="#2a1c10"/>
+<rect x="32" y="40" width="56" height="94" rx="28" fill="#f0d060" opacity=".28"/>
+<rect x="31" y="40" width="26" height="94" rx="2" fill="#6a4a28"/>
+<rect x="33" y="44" width="10" height="32" rx="1" fill="#4a3018" opacity=".4"/>
+<rect x="33" y="82" width="10" height="32" rx="1" fill="#4a3018" opacity=".4"/>
+<circle cx="58" cy="90" r="3" fill="#c9a256"/><circle cx="58" cy="90" r="1.5" fill="#e0bc78"/>
+<rect x="31" y="52" width="5" height="7" rx="1" fill="#8a6a38"/><rect x="31" y="112" width="5" height="7" rx="1" fill="#8a6a38"/>
+<ellipse cx="60" cy="136" rx="28" ry="4" fill="#0a0810" opacity=".55"/>
+<circle cx="18" cy="18" r=".9" fill="white" opacity=".6"/><circle cx="100" cy="13" r="1" fill="white" opacity=".5"/><circle cx="15" cy="128" r=".8" fill="white" opacity=".4"/><circle cx="108" cy="108" r=".9" fill="white" opacity=".5"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Дверь</text></svg>`},
+  {id:5, name:`Зеркало`, prompt:`Что я вижу в себе?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c5a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1a1028"/><stop offset="100%" stop-color="#0e1e2a"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c5a)"/>
+<ellipse cx="60" cy="78" rx="34" ry="44" fill="#8a6a38"/>
+<ellipse cx="60" cy="78" rx="34" ry="44" fill="none" stroke="#c9a256" stroke-width="1.5" opacity=".6"/>
+<ellipse cx="60" cy="78" rx="32" ry="42" fill="none" stroke="#e0bc78" stroke-width=".5" opacity=".4"/>
+<circle cx="60" cy="34" r="3" fill="#c9a256" opacity=".7"/><circle cx="60" cy="122" r="3" fill="#c9a256" opacity=".7"/>
+<circle cx="26" cy="78" r="3" fill="#c9a256" opacity=".7"/><circle cx="94" cy="78" r="3" fill="#c9a256" opacity=".7"/>
+<ellipse cx="60" cy="78" rx="29" ry="39" fill="#1a2838"/>
+<ellipse cx="58" cy="59" rx="7" ry="9" fill="#c0d0e0" opacity=".3"/>
+<path d="M50 68 Q46 78 48 92 Q54 96 60 96 Q66 96 72 92 Q74 78 70 68 Q66 64 60 64 Q54 64 50 68Z" fill="#c0d0e0" opacity=".2"/>
+<path d="M38 50 Q42 48 44 53 Q40 56 38 50Z" fill="white" opacity=".15"/>
+<rect x="56" y="120" width="8" height="17" rx="4" fill="#8a6a38"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Зеркало</text></svg>`},
+  {id:6, name:`Мост`, prompt:`Что соединяет меня с миром?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c6a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a1828"/><stop offset="100%" stop-color="#141e2a"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c6a)"/>
+<rect x="0" y="98" width="120" height="64" fill="#0a1420" opacity=".8"/>
+<path d="M0 98 Q30 94 60 98 Q90 102 120 98" stroke="#1a3050" stroke-width=".8" fill="none"/>
+<path d="M10 98 Q60 53 110 98" stroke="#9a9a8a" stroke-width="3" fill="none" stroke-linecap="round"/>
+<line x1="25" y1="98" x2="25" y2="68" stroke="#7a7a6a" stroke-width="1.5"/><line x1="95" y1="98" x2="95" y2="68" stroke="#7a7a6a" stroke-width="1.5"/>
+<g stroke="#8a8878" stroke-width=".7" opacity=".7">
+<line x1="25" y1="68" x2="38" y2="98"/><line x1="25" y1="68" x2="50" y2="98"/>
+<line x1="95" y1="68" x2="82" y2="98"/><line x1="95" y1="68" x2="70" y2="98"/>
+</g>
+<rect x="8" y="95" width="104" height="6" rx="1" fill="#6a6858"/>
+<circle cx="25" cy="65" r="2" fill="#f0d060" opacity=".6"/><circle cx="95" cy="65" r="2" fill="#f0d060" opacity=".6"/>
+<circle cx="20" cy="18" r="1" fill="white" opacity=".7"/><circle cx="80" cy="10" r="1.2" fill="white" opacity=".8"/><circle cx="55" cy="28" r=".8" fill="white" opacity=".5"/><circle cx="105" cy="20" r=".9" fill="white" opacity=".6"/>
+<path d="M93 20 Q88 28 90 38 Q96 31 98 22 Q96 19 93 20Z" fill="white" opacity=".55"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Мост</text></svg>`},
+  {id:7, name:`Вершина`, prompt:`К чему я поднимаюсь?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c7a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#060b18"/><stop offset="70%" stop-color="#101828"/><stop offset="100%" stop-color="#1a1010"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c7a)"/>
+<path d="M0 128 Q15 88 30 98 Q45 68 60 78 Q75 63 90 83 Q105 93 120 108 L120 162 L0 162Z" fill="#1a2030" opacity=".7"/>
+<path d="M20 148 Q40 78 60 38 Q80 78 100 148Z" fill="#2a3040"/>
+<path d="M25 148 Q42 86 60 46 Q78 86 95 148Z" fill="#303848"/>
+<path d="M50 68 Q55 53 60 38 Q65 53 70 68 Q65 63 60 56 Q55 63 50 68Z" fill="white" opacity=".75"/>
+<circle cx="60" cy="35" r="2.5" fill="#e0bc78" opacity=".8"/>
+<line x1="60" y1="37" x2="60" y2="45" stroke="#e0bc78" stroke-width="1" opacity=".7"/>
+<circle cx="15" cy="16" r="1" fill="white" opacity=".8"/><circle cx="90" cy="10" r="1.3" fill="white" opacity=".9"/><circle cx="40" cy="20" r=".8" fill="white" opacity=".6"/><circle cx="105" cy="26" r="1" fill="white" opacity=".7"/>
+<path d="M0 28 Q30 18 60 26 Q90 34 120 23" stroke="#40a080" stroke-width="1.5" fill="none" opacity=".18"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Вершина</text></svg>`},
+  {id:8, name:`Волна`, prompt:`Какие чувства движут мной?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c8a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#040c1a"/><stop offset="100%" stop-color="#0a1e38"/></linearGradient><linearGradient id="c8b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2060a0"/><stop offset="100%" stop-color="#0a3060"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c8a)"/>
+<rect x="0" y="98" width="120" height="64" fill="#071828"/>
+<path d="M-5 78 Q15 43 35 68 Q55 88 70 53 Q80 28 95 53 Q110 73 125 63 L125 128 Q90 118 60 128 Q30 138 -5 128Z" fill="url(#c8b)" opacity=".9"/>
+<path d="M70 53 Q80 28 95 53 Q85 46 78 56 Q74 60 70 53Z" fill="#5090c0" opacity=".7"/>
+<path d="M70 53 Q76 48 82 50 Q78 55 70 53Z" fill="white" opacity=".5"/>
+<path d="M-5 78 Q15 66 35 73 Q55 80 70 66" stroke="white" stroke-width="1.5" fill="none" opacity=".3"/>
+<circle cx="20" cy="13" r="1" fill="white" opacity=".7"/><circle cx="75" cy="8" r="1.2" fill="white" opacity=".8"/><circle cx="45" cy="23" r=".8" fill="white" opacity=".5"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Волна</text></svg>`},
+  {id:9, name:`Свеча`, prompt:`Что освещает мою тьму?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c9a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#100a14"/><stop offset="100%" stop-color="#18100a"/></linearGradient><radialGradient id="c9b" cx="60" cy="55" r="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#f0a020" stop-opacity=".6"/><stop offset="100%" stop-color="#f06010" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c9a)"/>
+<circle cx="60" cy="62" r="26" fill="url(#c9b)"/>
+<rect x="50" y="88" width="20" height="52" rx="3" fill="#f5f0e0"/>
+<path d="M50 93 Q46 98 47 106 Q49 108 50 103 Q50 98 50 93Z" fill="#f0e8d8" opacity=".7"/>
+<line x1="60" y1="88" x2="60" y2="73" stroke="#4a3820" stroke-width="1.5"/>
+<path d="M56 73 Q52 63 55 53 Q58 46 60 42 Q62 46 65 53 Q68 63 64 73 Q62 76 60 76 Q58 76 56 73Z" fill="#f0a020"/>
+<path d="M57 72 Q54 64 57 55 Q59 49 60 46 Q61 49 63 55 Q66 64 63 72 Q62 74 60 74 Q58 74 57 72Z" fill="#f8c040"/>
+<path d="M58 71 Q56 66 58 58 Q59.5 53 60 51 Q60.5 53 62 58 Q64 66 62 71 Q61 72.5 60 72.5 Q59 72.5 58 71Z" fill="#fff8a0" opacity=".8"/>
+<ellipse cx="60" cy="138" rx="20" ry="4" fill="#c0a860" opacity=".5"/>
+<ellipse cx="60" cy="89" rx="10" ry="3" fill="#f0e8d0" opacity=".7"/>
+<circle cx="15" cy="18" r=".8" fill="white" opacity=".4"/><circle cx="100" cy="28" r="1" fill="white" opacity=".5"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Свеча</text></svg>`},
+  {id:10, name:`Росток`, prompt:`Что во мне растёт?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c10a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a1a0a"/><stop offset="60%" stop-color="#121e08"/><stop offset="100%" stop-color="#2a1808"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c10a)"/>
+<path d="M0 132 Q60 125 120 132 L120 162 L0 162Z" fill="#2a1808"/>
+<path d="M0 129 Q30 124 60 127 Q90 130 120 125" stroke="#3a2210" stroke-width="1.5" fill="none"/>
+<path d="M60 130 Q58 118 55 103 Q52 88 56 73 Q58 63 60 56" stroke="#3a7020" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<path d="M55 98 Q38 86 30 70 Q38 76 48 88 Q52 93 55 98Z" fill="#3a8028"/>
+<path d="M57 80 Q74 66 85 50 Q77 58 65 72 Q60 77 57 80Z" fill="#4a9030"/>
+<path d="M59 63 Q64 54 70 48 Q66 55 62 61 Q61 62 59 63Z" fill="#5ab038" opacity=".8"/>
+<ellipse cx="60" cy="54" rx="4" ry="5" fill="#4ab030"/>
+<ellipse cx="60" cy="52" rx="2.5" ry="3" fill="#60c040"/>
+<ellipse cx="42" cy="82" rx="2" ry="1.5" fill="white" opacity=".4"/>
+<line x1="60" y1="8" x2="60" y2="53" stroke="#f0e080" stroke-width="2" opacity=".07"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Росток</text></svg>`},
+  {id:11, name:`Бабочка`, prompt:`Как я изменился(-ась)?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c11a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0e0818"/><stop offset="100%" stop-color="#18100a"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c11a)"/>
+<ellipse cx="60" cy="82" rx="45" ry="38" fill="#c080a0" opacity=".07"/>
+<path d="M58 80 Q30 53 15 63 Q8 78 20 88 Q35 96 58 86Z" fill="#9040a0" opacity=".85"/>
+<path d="M62 80 Q90 53 105 63 Q112 78 100 88 Q85 96 62 86Z" fill="#a050b0" opacity=".85"/>
+<path d="M58 86 Q25 93 18 108 Q20 123 38 116 Q52 110 58 96Z" fill="#7030a0" opacity=".8"/>
+<path d="M62 86 Q95 93 102 108 Q100 123 82 116 Q68 110 62 96Z" fill="#8040b0" opacity=".8"/>
+<circle cx="35" cy="74" r="6" fill="none" stroke="#f0a0e0" stroke-width="1" opacity=".5"/>
+<circle cx="35" cy="74" r="2" fill="#f0a0e0" opacity=".3"/>
+<circle cx="85" cy="74" r="6" fill="none" stroke="#f0a0e0" stroke-width="1" opacity=".5"/>
+<circle cx="28" cy="103" r="3" fill="#e0a030" opacity=".5"/><circle cx="92" cy="103" r="3" fill="#e0a030" opacity=".5"/>
+<ellipse cx="60" cy="83" rx="3" ry="18" fill="#2a1828"/>
+<path d="M59 66 Q50 53 44 46" stroke="#8050a0" stroke-width="1" fill="none"/>
+<path d="M61 66 Q70 53 76 46" stroke="#8050a0" stroke-width="1" fill="none"/>
+<circle cx="44" cy="46" r="2" fill="#c080c0"/><circle cx="76" cy="46" r="2" fill="#c080c0"/>
+<circle cx="15" cy="18" r=".9" fill="white" opacity=".6"/><circle cx="100" cy="13" r="1.1" fill="white" opacity=".7"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Бабочка</text></svg>`},
+  {id:12, name:`Ключ`, prompt:`Что я могу открыть в себе?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c12a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#120e08"/><stop offset="100%" stop-color="#1a1428"/></linearGradient><radialGradient id="c12b" cx=".5" cy=".35" r=".4"><stop offset="0%" stop-color="#c9a256" stop-opacity=".25"/><stop offset="100%" stop-color="#c9a256" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c12a)"/>
+<rect width="120" height="162" fill="url(#c12b)"/>
+<circle cx="60" cy="52" r="24" fill="none" stroke="#c9a256" stroke-width="6"/>
+<circle cx="60" cy="52" r="24" fill="none" stroke="#e0bc78" stroke-width="2.5"/>
+<circle cx="60" cy="52" r="14" fill="none" stroke="#c9a256" stroke-width="2.5"/>
+<circle cx="60" cy="52" r="5" fill="#c9a256" opacity=".5"/>
+<rect x="57" y="74" width="6" height="60" rx="3" fill="#c9a256"/>
+<rect x="63" y="105" width="10" height="6" rx="2" fill="#c9a256"/>
+<rect x="63" y="117" width="8" height="5" rx="2" fill="#c9a256"/>
+<rect x="63" y="127" width="12" height="6" rx="2" fill="#c9a256"/>
+<circle cx="60" cy="52" r="8" fill="none" stroke="#e0bc78" stroke-width="1" opacity=".5"/>
+<circle cx="60" cy="20" r="18" fill="none" stroke="rgba(201,162,86,.08)" stroke-width="8"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Ключ</text></svg>`},
+  {id:13, name:`Созвездие`, prompt:`Какой путь я вижу?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c13a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#040810"/><stop offset="100%" stop-color="#080418"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c13a)"/>
+<ellipse cx="60" cy="82" rx="20" ry="62" fill="white" opacity=".022" transform="rotate(20,60,82)"/>
+<g stroke="#c9a256" stroke-width=".8" opacity=".45">
+<line x1="35" y1="38" x2="55" y2="60"/><line x1="55" y1="60" x2="80" y2="48"/>
+<line x1="80" y1="48" x2="90" y2="76"/><line x1="90" y1="76" x2="70" y2="93"/>
+<line x1="70" y1="93" x2="50" y2="83"/><line x1="50" y1="83" x2="35" y2="108"/>
+<line x1="70" y1="93" x2="85" y2="113"/><line x1="55" y1="60" x2="40" y2="78"/>
+<line x1="40" y1="78" x2="50" y2="83"/>
+</g>
+<g fill="white"><circle cx="15" cy="18" r=".6" opacity=".4"/><circle cx="95" cy="20" r=".6" opacity=".4"/><circle cx="110" cy="33" r=".5" opacity=".3"/><circle cx="8" cy="53" r=".5" opacity=".3"/><circle cx="105" cy="58" r=".6" opacity=".35"/><circle cx="20" cy="98" r=".5" opacity=".28"/><circle cx="12" cy="128" r=".6" opacity=".3"/><circle cx="100" cy="118" r=".5" opacity=".28"/></g>
+<g fill="#e0d8f0"><circle cx="35" cy="38" r="2.5"/><circle cx="55" cy="60" r="2"/><circle cx="80" cy="48" r="3"/><circle cx="90" cy="76" r="2"/><circle cx="70" cy="93" r="2.5"/><circle cx="50" cy="83" r="2"/><circle cx="35" cy="108" r="2"/><circle cx="85" cy="113" r="1.8"/><circle cx="40" cy="78" r="1.8"/></g>
+<circle cx="80" cy="48" r="8" fill="#e0d8f0" opacity=".1"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Созвездие</text></svg>`},
+  {id:14, name:`Компас`, prompt:`Куда меня ведут ценности?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c14a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0e0e18"/><stop offset="100%" stop-color="#181008"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c14a)"/>
+<circle cx="60" cy="80" r="42" fill="#1a1428" stroke="#8a7040" stroke-width="1.5"/>
+<circle cx="60" cy="80" r="38" fill="none" stroke="#c9a256" stroke-width=".8" opacity=".5"/>
+<circle cx="60" cy="80" r="35" fill="#141020"/>
+<g stroke="#6a5830" stroke-width=".6"><line x1="60" y1="45" x2="60" y2="49"/><line x1="60" y1="111" x2="60" y2="115"/><line x1="25" y1="80" x2="29" y2="80"/><line x1="91" y1="80" x2="95" y2="80"/></g>
+<text x="60" y="51" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#e0bc78" font-weight="bold">С</text>
+<text x="60" y="115" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#c0a060">Ю</text>
+<text x="25" y="83" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#c0a060">З</text>
+<text x="95" y="83" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#c0a060">В</text>
+<path d="M60 80 L56 58 L60 52 L64 58 Z" fill="#c04040"/>
+<path d="M60 80 L56 102 L60 108 L64 102 Z" fill="#e0e0d0" opacity=".7"/>
+<circle cx="60" cy="80" r="5" fill="#2a2030" stroke="#c9a256" stroke-width="1"/>
+<circle cx="60" cy="80" r="2.5" fill="#c9a256"/>
+<circle cx="18" cy="18" r=".8" fill="white" opacity=".5"/><circle cx="100" cy="13" r="1" fill="white" opacity=".6"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Компас</text></svg>`},
+  {id:15, name:`Река`, prompt:`Куда течёт моя жизнь?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c15a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a1a0a"/><stop offset="100%" stop-color="#0a1428"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c15a)"/>
+<ellipse cx="20" cy="43" rx="18" ry="14" fill="#1a3a10" opacity=".8"/>
+<ellipse cx="100" cy="48" rx="16" ry="12" fill="#1a3a10" opacity=".75"/>
+<ellipse cx="15" cy="118" rx="14" ry="10" fill="#162e0c" opacity=".7"/>
+<ellipse cx="102" cy="123" rx="13" ry="10" fill="#162e0c" opacity=".7"/>
+<path d="M48 8 Q52 28 45 48 Q40 68 50 88 Q60 108 55 128 Q50 148 62 162" fill="none" stroke="#2060a0" stroke-width="16" stroke-linecap="round" opacity=".6"/>
+<path d="M48 8 Q52 28 45 48 Q40 68 50 88 Q60 108 55 128 Q50 148 62 162" fill="none" stroke="#5090d0" stroke-width="5" stroke-linecap="round" opacity=".35"/>
+<path d="M47 18 Q51 23 46 33" stroke="white" stroke-width=".8" fill="none" opacity=".2"/>
+<path d="M44 63 Q48 70 43 80" stroke="white" stroke-width=".8" fill="none" opacity=".2"/>
+<circle cx="85" cy="13" r="1" fill="white" opacity=".6"/><circle cx="105" cy="20" r=".8" fill="white" opacity=".5"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Река</text></svg>`},
+  {id:16, name:`Ракушка`, prompt:`Что я слышу внутри себя?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c16a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#180810"/><stop offset="100%" stop-color="#0e1828"/></linearGradient><radialGradient id="c16b" cx=".5" cy=".45" r=".5"><stop offset="0%" stop-color="#f0a0c0" stop-opacity=".35"/><stop offset="100%" stop-color="#f0a0c0" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c16a)"/>
+<ellipse cx="60" cy="85" rx="42" ry="42" fill="url(#c16b)"/>
+<path d="M60 85 Q72 69 78 55 Q80 39 70 31 Q56 23 44 31 Q30 41 30 57 Q30 75 44 85 Q58 95 74 93 Q90 87 96 73 Q100 57 92 43 Q82 27 64 23 Q42 15 26 29 Q10 43 12 65 Q14 87 30 99 Q48 113 70 111 Q92 105 104 87 Q114 67 108 45" fill="none" stroke="#d890b0" stroke-width="1.5" opacity=".6"/>
+<ellipse cx="60" cy="85" rx="12" ry="14" fill="#d070a0" opacity=".2"/>
+<path d="M50 62 Q54 59 56 63 Q52 65 50 62Z" fill="white" opacity=".25"/>
+<rect x="0" y="150" width="120" height="12" fill="#0a0a18" opacity=".4"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Ракушка</text></svg>`},
+  {id:17, name:`Ладони`, prompt:`Что я даю и получаю?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c17a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#180e08"/><stop offset="100%" stop-color="#100818"/></linearGradient><radialGradient id="c17b" cx=".5" cy=".6" r=".5"><stop offset="0%" stop-color="#e0a060" stop-opacity=".3"/><stop offset="100%" stop-color="#e0a060" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c17a)"/>
+<rect width="120" height="162" fill="url(#c17b)"/>
+<path d="M18 138 Q14 118 16 98 Q18 78 22 63 Q24 56 28 56 Q32 56 32 63 L32 88 Q35 78 36 66 Q37 60 41 60 Q45 60 45 66 L44 88 Q46 78 47 68 Q48 62 52 62 Q56 62 56 68 L54 90 Q57 80 58 72 Q59 66 63 66 Q67 66 67 72 L64 98 Q68 88 70 83 Q72 78 76 80 Q80 84 77 94 L72 113 Q68 126 62 136 Q55 146 46 148 Q32 150 18 138Z" fill="#c89060" opacity=".85"/>
+<ellipse cx="50" cy="86" rx="16" ry="9" fill="#f0d080" opacity=".15"/>
+<circle cx="50" cy="84" r="5" fill="#f8e060" opacity=".3"/>
+<circle cx="50" cy="84" r="2.5" fill="white" opacity=".4"/>
+<circle cx="15" cy="16" r=".8" fill="white" opacity=".5"/><circle cx="100" cy="10" r="1" fill="white" opacity=".6"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Ладони</text></svg>`},
+  {id:18, name:`Луна`, prompt:`Что происходит в глубинах?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c18a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#040610"/><stop offset="100%" stop-color="#0c0818"/></linearGradient><radialGradient id="c18b" cx="65" cy="68" r="40" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#d8d0f0" stop-opacity=".35"/><stop offset="100%" stop-color="#d8d0f0" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c18a)"/>
+<circle cx="65" cy="68" r="38" fill="url(#c18b)"/>
+<circle cx="65" cy="68" r="28" fill="#d8d0f0"/>
+<circle cx="78" cy="60" r="24" fill="#0c0818"/>
+<circle cx="50" cy="64" r="3" fill="#c0b8e0" opacity=".3"/><circle cx="58" cy="78" r="2" fill="#c0b8e0" opacity=".25"/>
+<g fill="white"><circle cx="15" cy="13" r="1.2" opacity=".8"/><circle cx="95" cy="8" r=".9" opacity=".7"/><circle cx="40" cy="18" r=".7" opacity=".6"/><circle cx="108" cy="26" r="1" opacity=".65"/><circle cx="20" cy="36" r=".8" opacity=".5"/><circle cx="10" cy="53" r=".6" opacity=".45"/><circle cx="105" cy="48" r=".8" opacity=".55"/><circle cx="18" cy="88" r=".9" opacity=".45"/><circle cx="8" cy="108" r=".7" opacity=".4"/><circle cx="30" cy="128" r=".8" opacity=".35"/></g>
+<rect x="0" y="128" width="120" height="34" fill="#080614" opacity=".6"/>
+<ellipse cx="45" cy="136" rx="15" ry="4" fill="#c8c0e8" opacity=".12"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Луна</text></svg>`},
+  {id:19, name:`Солнце`, prompt:`Что даёт мне энергию?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c19a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#100a00"/><stop offset="50%" stop-color="#201000"/><stop offset="100%" stop-color="#281808"/></linearGradient><radialGradient id="c19b" cx="60" cy="70" r="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#f0b020" stop-opacity=".6"/><stop offset="50%" stop-color="#e06010" stop-opacity=".2"/><stop offset="100%" stop-color="#e06010" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c19a)"/>
+<circle cx="60" cy="70" r="48" fill="url(#c19b)"/>
+<g stroke="#e09020" stroke-width="1.5" opacity=".5"><line x1="60" y1="70" x2="60" y2="20"/><line x1="60" y1="70" x2="60" y2="120"/><line x1="60" y1="70" x2="10" y2="70"/><line x1="60" y1="70" x2="110" y2="70"/><line x1="60" y1="70" x2="24.6" y2="34.6"/><line x1="60" y1="70" x2="95.4" y2="34.6"/><line x1="60" y1="70" x2="24.6" y2="105.4"/><line x1="60" y1="70" x2="95.4" y2="105.4"/></g>
+<g stroke="#f0b030" stroke-width=".8" opacity=".3"><line x1="60" y1="70" x2="18" y2="48"/><line x1="60" y1="70" x2="102" y2="48"/><line x1="60" y1="70" x2="18" y2="92"/><line x1="60" y1="70" x2="102" y2="92"/></g>
+<circle cx="60" cy="70" r="22" fill="#f0b020" opacity=".9"/>
+<circle cx="60" cy="70" r="18" fill="#f8c030"/>
+<circle cx="60" cy="70" r="12" fill="#ffe060"/>
+<circle cx="60" cy="70" r="6" fill="white" opacity=".7"/>
+<ellipse cx="60" cy="148" rx="70" ry="12" fill="#e06010" opacity=".18"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Солнце</text></svg>`},
+  {id:20, name:`Тропинка`, prompt:`Куда ведёт меня мой путь?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c20a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#080e08"/><stop offset="100%" stop-color="#0e1808"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c20a)"/>
+<rect x="0" y="18" width="35" height="144" fill="#0a1808" opacity=".9"/>
+<rect x="85" y="18" width="35" height="144" fill="#0a1808" opacity=".9"/>
+<g stroke="#2a1808" stroke-width="4" opacity=".8"><line x1="8" y1="23" x2="10" y2="162"/><line x1="22" y1="26" x2="20" y2="162"/><line x1="32" y1="28" x2="30" y2="162"/><line x1="112" y1="23" x2="110" y2="162"/><line x1="98" y1="26" x2="100" y2="162"/><line x1="88" y1="28" x2="90" y2="162"/></g>
+<path d="M42 162 Q44 128 48 98 Q52 68 56 48 Q58 36 60 28 Q62 36 64 48 Q68 68 72 98 Q76 128 78 162Z" fill="#4a3820" opacity=".7"/>
+<ellipse cx="60" cy="28" rx="12" ry="8" fill="#f0d060" opacity=".2"/>
+<ellipse cx="60" cy="142" rx="6" ry="2" fill="#6a5030" opacity=".6"/>
+<ellipse cx="59" cy="118" rx="5" ry="2" fill="#6a5030" opacity=".5"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Тропинка</text></svg>`},
+  {id:21, name:`Якорь`, prompt:`Что удерживает меня?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c21a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#040c18"/><stop offset="100%" stop-color="#08101e"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c21a)"/>
+<path d="M0 68 Q30 62 60 68 Q90 74 120 68 L120 162 L0 162Z" fill="#081828" opacity=".7"/>
+<path d="M0 66 Q30 60 60 66 Q90 72 120 66" stroke="#1a4060" stroke-width=".8" fill="none" opacity=".5"/>
+<path d="M60 28 Q62 48 60 68" stroke="#8a6a40" stroke-width="2" fill="none" stroke-dasharray="3,2"/>
+<circle cx="60" cy="30" r="8" fill="none" stroke="#c9a256" stroke-width="3"/>
+<rect x="38" y="44" width="44" height="6" rx="3" fill="#8a7a60"/>
+<rect x="57" y="48" width="6" height="63" rx="3" fill="#8a7a60"/>
+<path d="M58 110 Q48 116 38 123 Q34 130 40 134 Q46 138 52 130 Q56 122 58 116Z" fill="#8a7a60"/>
+<path d="M62 110 Q72 116 82 123 Q86 130 80 134 Q74 138 68 130 Q64 122 62 116Z" fill="#8a7a60"/>
+<circle cx="40" cy="133" r="4" fill="#8a7a60" stroke="#c9a256" stroke-width="1" opacity=".6"/>
+<circle cx="80" cy="133" r="4" fill="#8a7a60" stroke="#c9a256" stroke-width="1" opacity=".6"/>
+<circle cx="18" cy="16" r="1" fill="white" opacity=".6"/><circle cx="90" cy="10" r="1.1" fill="white" opacity=".7"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Якорь</text></svg>`},
+  {id:22, name:`Гнездо`, prompt:`Что я создаю и берегу?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c22a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a1408"/><stop offset="100%" stop-color="#14100a"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c22a)"/>
+<path d="M0 108 Q30 98 60 103 Q90 108 120 98" stroke="#4a3010" stroke-width="8" fill="none" stroke-linecap="round"/>
+<ellipse cx="15" cy="93" rx="10" ry="6" fill="#2a4810" opacity=".7" transform="rotate(-20,15,93)"/>
+<ellipse cx="105" cy="90" rx="9" ry="5" fill="#284618" opacity=".7" transform="rotate(15,105,90)"/>
+<path d="M28 108 Q32 93 60 90 Q88 93 92 108 Q90 123 60 126 Q30 123 28 108Z" fill="#5a3a18"/>
+<g stroke="#4a2a10" stroke-width=".8" fill="none" opacity=".5">
+<path d="M32 106 Q45 98 60 96 Q75 98 88 106"/>
+<path d="M30 111 Q44 103 60 101 Q76 103 90 111"/>
+<path d="M30 116 Q44 110 60 108 Q76 110 90 116"/>
+</g>
+<ellipse cx="60" cy="114" rx="22" ry="10" fill="#2a1808"/>
+<ellipse cx="50" cy="113" rx="8" ry="6" fill="#d8e8f0" transform="rotate(-10,50,113)"/>
+<ellipse cx="64" cy="111" rx="8" ry="6" fill="#e0ead8" transform="rotate(8,64,111)"/>
+<ellipse cx="73" cy="114" rx="7" ry="5.5" fill="#d8e8f0" transform="rotate(-5,73,114)"/>
+<circle cx="20" cy="18" r="1" fill="white" opacity=".7"/><circle cx="80" cy="10" r="1.2" fill="white" opacity=".75"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Гнездо</text></svg>`},
+  {id:23, name:`Сердце`, prompt:`Что я люблю по-настоящему?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c23a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#180808"/><stop offset="100%" stop-color="#100818"/></linearGradient><radialGradient id="c23b" cx=".5" cy=".5" r=".5"><stop offset="0%" stop-color="#d04040" stop-opacity=".4"/><stop offset="100%" stop-color="#d04040" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c23a)"/>
+<ellipse cx="60" cy="82" rx="46" ry="40" fill="url(#c23b)"/>
+<path d="M60 112 Q30 95 18 77 Q8 57 22 43 Q36 29 50 41 Q55 45 60 53 Q65 45 70 41 Q84 29 98 43 Q112 57 102 77 Q90 95 60 112Z" fill="#c83838"/>
+<path d="M60 109 Q32 93 22 75 Q12 59 26 47 Q38 35 50 45 Q55 49 60 57 Q65 49 70 45 Q82 35 94 47 Q108 59 98 75 Q88 93 60 109Z" fill="#d84040"/>
+<path d="M38 50 Q46 42 50 48 Q46 52 40 54 Q38 54 38 50Z" fill="white" opacity=".2"/>
+<g stroke="#803030" stroke-width="1.2" fill="none" opacity=".6">
+<path d="M60 112 Q55 125 50 135 Q44 145 40 155"/><path d="M60 112 Q65 125 70 135 Q76 145 80 155"/>
+</g>
+<circle cx="15" cy="13" r=".8" fill="white" opacity=".5"/><circle cx="108" cy="10" r="1" fill="white" opacity=".55"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Сердце</text></svg>`},
+  {id:24, name:`Лабиринт`, prompt:`В чём моя сложность?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c24a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0e0e18"/><stop offset="100%" stop-color="#181008"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c24a)"/>
+<g fill="none"><circle cx="60" cy="85" r="44" stroke="#3a3028" stroke-width="2.5"/><circle cx="60" cy="85" r="37" stroke="#3a3028" stroke-width="2.5"/><circle cx="60" cy="85" r="30" stroke="#3a3028" stroke-width="2.5"/><circle cx="60" cy="85" r="23" stroke="#3a3028" stroke-width="2.5"/><circle cx="60" cy="85" r="16" stroke="#3a3028" stroke-width="2.5"/><circle cx="60" cy="85" r="9" stroke="#c9a256" stroke-width="2" opacity=".7"/></g>
+<rect x="55" y="39" width="10" height="5" fill="url(#c24a)"/>
+<rect x="95" y="82" width="5" height="8" fill="url(#c24a)"/>
+<rect x="55" y="112" width="10" height="5" fill="url(#c24a)"/>
+<rect x="20" y="82" width="5" height="8" fill="url(#c24a)"/>
+<rect x="55" y="60" width="10" height="5" fill="url(#c24a)"/>
+<circle cx="60" cy="85" r="6" fill="#c9a256" opacity=".25"/>
+<circle cx="60" cy="85" r="3" fill="#e0bc78" opacity=".5"/>
+<circle cx="60" cy="41" r="2.5" fill="#c9a256" opacity=".7"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Лабиринт</text></svg>`},
+  {id:25, name:`Фонарь`, prompt:`Что помогает мне в темноте?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c25a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a0c14"/><stop offset="100%" stop-color="#14100a"/></linearGradient><radialGradient id="c25b" cx="60" cy="65" r="35" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e8c040" stop-opacity=".5"/><stop offset="100%" stop-color="#e8c040" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c25a)"/>
+<circle cx="60" cy="65" r="32" fill="url(#c25b)"/>
+<rect x="55" y="120" width="10" height="22" rx="2" fill="#8a7050"/>
+<path d="M45 105 L42 120 L78 120 L75 105Z" fill="#6a5838"/>
+<rect x="42" y="100" width="36" height="8" rx="3" fill="#7a6848"/>
+<rect x="44" y="45" width="32" height="57" rx="4" fill="#5a4828" stroke="#c9a256" stroke-width="1" opacity=".6"/>
+<rect x="46" y="47" width="28" height="53" rx="3" fill="#f0d050" opacity=".3"/>
+<ellipse cx="60" cy="73" rx="10" ry="12" fill="#f8e060" opacity=".6"/>
+<ellipse cx="60" cy="73" rx="5" ry="6" fill="#fff" opacity=".5"/>
+<path d="M44 55 Q48 52 50 57 Q47 60 44 55Z" fill="white" opacity=".2"/>
+<rect x="50" y="43" width="20" height="5" rx="2" fill="#8a7050"/>
+<line x1="60" y1="38" x2="60" y2="43" stroke="#8a7050" stroke-width="2"/>
+<ellipse cx="60" cy="36" rx="8" ry="4" fill="#8a7050"/>
+<circle cx="15" cy="18" r=".9" fill="white" opacity=".5"/><circle cx="100" cy="12" r="1.1" fill="white" opacity=".6"/><circle cx="20" cy="135" r=".8" fill="white" opacity=".35"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Фонарь</text></svg>`},
+  {id:26, name:`Письмо`, prompt:`Что я хочу сказать себе?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c26a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0e100a"/><stop offset="100%" stop-color="#181020"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c26a)"/>
+<rect x="16" y="42" width="88" height="70" rx="4" fill="#f5f0e0" opacity=".9"/>
+<path d="M16 42 L60 75 L104 42" stroke="#d0c8a0" stroke-width="1" fill="none"/>
+<path d="M16 112 L48 85" stroke="#d0c8a0" stroke-width=".7" fill="none" opacity=".5"/>
+<path d="M104 112 L72 85" stroke="#d0c8a0" stroke-width=".7" fill="none" opacity=".5"/>
+<g stroke="#c0a870" stroke-width=".8" opacity=".5">
+<line x1="26" y1="63" x2="70" y2="63"/>
+<line x1="26" y1="71" x2="94" y2="71"/>
+<line x1="26" y1="79" x2="94" y2="79"/>
+<line x1="26" y1="87" x2="80" y2="87"/>
+<line x1="26" y1="95" x2="62" y2="95"/>
+</g>
+<path d="M54 122 Q60 130 66 122" stroke="#c9a256" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+<circle cx="60" cy="118" r="3" fill="#c9a256" opacity=".7"/>
+<circle cx="20" cy="22" r=".9" fill="white" opacity=".5"/><circle cx="98" cy="15" r="1" fill="white" opacity=".55"/><circle cx="105" cy="140" r=".8" fill="white" opacity=".4"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Письмо</text></svg>`},
+  {id:27, name:`Семена`, prompt:`Что я посеял(-а)?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c27a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a1a08"/><stop offset="100%" stop-color="#201408"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c27a)"/>
+<ellipse cx="40" cy="135" rx="38" ry="18" fill="#1a1008" opacity=".6"/>
+<path d="M0 130 Q60 118 120 130 L120 162 L0 162Z" fill="#281808"/>
+<g fill="#c9a256" opacity=".8">
+<ellipse cx="35" cy="128" rx="5" ry="3" transform="rotate(-20,35,128)"/>
+<ellipse cx="55" cy="125" rx="5" ry="3" transform="rotate(10,55,125)"/>
+<ellipse cx="75" cy="127" rx="5" ry="3" transform="rotate(-15,75,127)"/>
+<ellipse cx="92" cy="130" rx="5" ry="3" transform="rotate(25,92,130)"/>
+<ellipse cx="22" cy="133" rx="4" ry="2.5" transform="rotate(30,22,133)"/>
+</g>
+<g stroke="#4a8020" stroke-width="1.5" fill="none" stroke-linecap="round">
+<path d="M35 128 Q34 118 30 108 Q28 98 32 88"/><path d="M55 125 Q56 112 58 100 Q60 88 58 76"/>
+<path d="M75 127 Q76 115 78 103 Q80 90 76 78"/><path d="M92 130 Q90 118 88 106"/>
+</g>
+<path d="M30 108 Q25 102 20 95 Q28 100 32 108Z" fill="#3a7018"/><path d="M32 92 Q38 84 46 82 Q42 90 34 94Z" fill="#3a7018"/>
+<path d="M58 100 Q52 92 48 85 Q56 90 60 100Z" fill="#4a8020"/><path d="M58 80 Q65 72 74 70 Q68 78 60 82Z" fill="#4a8020"/>
+<circle cx="20" cy="25" r=".9" fill="white" opacity=".5"/><circle cx="88" cy="15" r="1" fill="white" opacity=".6"/><circle cx="105" cy="35" r=".8" fill="white" opacity=".45"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Семена</text></svg>`},
+  {id:28, name:`Огонь`, prompt:`Что меня зажигает?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c28a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a0400"/><stop offset="100%" stop-color="#201000"/></linearGradient><radialGradient id="c28b" cx="60" cy="90" r="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e05010" stop-opacity=".5"/><stop offset="100%" stop-color="#e05010" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c28a)"/>
+<ellipse cx="60" cy="130" rx="45" ry="20" fill="url(#c28b)"/>
+<path d="M36 130 Q34 110 40 92 Q46 74 42 58 Q50 70 48 86 Q56 72 54 54 Q60 68 58 84 Q64 70 62 52 Q70 66 66 84 Q72 70 76 58 Q78 78 72 96 Q78 108 80 130Z" fill="#c04010" opacity=".9"/>
+<path d="M40 130 Q38 112 44 96 Q50 80 46 64 Q54 76 52 90 Q58 76 56 58 Q62 70 60 86 Q66 72 70 62 Q72 80 68 96 Q74 108 76 130Z" fill="#e06020"/>
+<path d="M44 130 Q42 114 48 100 Q54 86 50 72 Q56 82 54 94 Q60 82 62 68 Q66 80 64 96 Q68 110 72 130Z" fill="#f08030"/>
+<path d="M50 130 Q48 116 52 104 Q56 92 54 80 Q58 90 58 100 Q62 90 64 78 Q66 92 64 108 Q66 118 70 130Z" fill="#f8b040"/>
+<path d="M54 130 Q52 118 56 108 Q58 98 58 90 Q60 98 62 108 Q64 118 66 130Z" fill="#ffe060"/>
+<rect x="0" y="130" width="120" height="32" fill="#100800" opacity=".7"/>
+<circle cx="15" cy="15" r=".8" fill="white" opacity=".3"/><circle cx="95" cy="10" r="1" fill="white" opacity=".35"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Огонь</text></svg>`},
+  {id:29, name:`Крылья`, prompt:`От чего я освобождаюсь?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c29a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08081a"/><stop offset="100%" stop-color="#141028"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c29a)"/>
+<ellipse cx="60" cy="78" rx="50" ry="40" fill="#a060c0" opacity=".07"/>
+<path d="M58 78 Q28 45 8 50 Q-2 65 10 78 Q25 90 55 82Z" fill="#8050b0" opacity=".8"/>
+<path d="M58 78 Q45 55 30 48 Q20 52 22 65 Q25 78 50 80Z" fill="#a070c0" opacity=".7"/>
+<path d="M62 78 Q92 45 112 50 Q122 65 110 78 Q95 90 65 82Z" fill="#8050b0" opacity=".8"/>
+<path d="M62 78 Q75 55 90 48 Q100 52 98 65 Q95 78 70 80Z" fill="#a070c0" opacity=".7"/>
+<ellipse cx="60" cy="78" rx="3" ry="20" fill="#2a1838"/>
+<ellipse cx="60" cy="62" rx="2" ry="8" fill="#3a2845"/>
+<g fill="#e0d0f8" opacity=".3"><circle cx="25" cy="62" r="4"/><circle cx="95" cy="62" r="4"/><circle cx="15" cy="75" r="3"/><circle cx="105" cy="75" r="3"/></g>
+<g stroke="#c0a0e0" stroke-width=".5" fill="none" opacity=".4">
+<path d="M58 78 Q42 68 28 65"/><path d="M62 78 Q78 68 92 65"/>
+<path d="M58 78 Q48 60 40 52"/><path d="M62 78 Q72 60 80 52"/>
+</g>
+<circle cx="20" cy="20" r=".9" fill="white" opacity=".6"/><circle cx="95" cy="12" r="1.1" fill="white" opacity=".7"/><circle cx="108" cy="40" r=".8" fill="white" opacity=".5"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Крылья</text></svg>`},
+  {id:30, name:`Горизонт`, prompt:`Что открывается передо мной?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c30a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#040810"/><stop offset="40%" stop-color="#0e1828"/><stop offset="65%" stop-color="#d06020"/><stop offset="80%" stop-color="#e08030"/><stop offset="100%" stop-color="#c04010"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c30a)"/>
+<ellipse cx="60" cy="95" rx="70" ry="28" fill="#f0a030" opacity=".3"/>
+<ellipse cx="60" cy="98" rx="60" ry="20" fill="#f8b040" opacity=".25"/>
+<line x1="0" y1="98" x2="120" y2="98" stroke="#e09030" stroke-width="1" opacity=".6"/>
+<rect x="0" y="98" width="120" height="64" fill="#060808" opacity=".65"/>
+<ellipse cx="60" cy="98" rx="35" ry="10" fill="#e08020" opacity=".2"/>
+<circle cx="60" cy="8" r=".8" fill="white" opacity=".7"/><circle cx="30" cy="18" r="1" fill="white" opacity=".75"/><circle cx="90" cy="15" r="1.2" fill="white" opacity=".8"/><circle cx="12" cy="30" r=".8" fill="white" opacity=".6"/><circle cx="108" cy="28" r=".9" fill="white" opacity=".65"/>
+<circle cx="15" cy="48" r=".7" fill="white" opacity=".5"/><circle cx="105" cy="52" r=".8" fill="white" opacity=".55"/><circle cx="50" cy="35" r=".6" fill="white" opacity=".45"/>
+<path d="M0 78 Q20 74 35 76 Q50 78 55 75" stroke="white" stroke-width=".7" fill="none" opacity=".08"/>
+<path d="M75 74 Q90 76 105 73 Q112 72 120 74" stroke="white" stroke-width=".7" fill="none" opacity=".08"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Горизонт</text></svg>`},
+  {id:31, name:`Пещера`, prompt:`Где моё убежище?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c31a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#080808"/><stop offset="100%" stop-color="#101018"/></linearGradient><radialGradient id="c31b" cx="60" cy="75" r="40" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#6060c0" stop-opacity=".25"/><stop offset="100%" stop-color="#6060c0" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c31a)"/>
+<path d="M0 162 Q5 130 10 110 Q15 90 20 80 Q25 70 35 62 Q45 55 55 52 Q65 50 75 52 Q85 56 92 65 Q100 76 105 90 Q110 105 114 125 Q118 145 120 162Z" fill="#1a1828" opacity=".85"/>
+<path d="M15 162 Q20 138 28 118 Q35 100 45 88 Q54 78 60 76 Q66 78 75 88 Q85 100 92 118 Q100 138 105 162Z" fill="#0e0c14" opacity=".9"/>
+<circle cx="60" cy="90" r="25" fill="url(#c31b)"/>
+<path d="M15 162 Q20 140 30 120 Q40 102 52 90 Q56 85 60 83 Q64 85 68 90 Q80 102 90 120 Q100 140 105 162Z" fill="#12101a" opacity=".7"/>
+<ellipse cx="60" cy="100" rx="18" ry="22" fill="#3030a0" opacity=".12"/>
+<g fill="white" opacity=".5"><circle cx="28" cy="35" r=".9"/><circle cx="55" cy="22" r="1.1"/><circle cx="80" cy="28" r=".8"/><circle cx="100" cy="18" r="1"/><circle cx="15" cy="50" r=".7"/><circle cx="105" cy="45" r=".8"/></g>
+<ellipse cx="60" cy="155" rx="20" ry="5" fill="#302840" opacity=".4"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Пещера</text></svg>`},
+  {id:32, name:`Рассвет`, prompt:`Что начинается в моей жизни?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c32a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#030510"/><stop offset="45%" stop-color="#1a0a28"/><stop offset="65%" stop-color="#c03878"/><stop offset="80%" stop-color="#e06830"/><stop offset="100%" stop-color="#f0a040"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c32a)"/>
+<ellipse cx="60" cy="108" rx="70" ry="30" fill="#f08040" opacity=".3"/>
+<ellipse cx="60" cy="110" rx="55" ry="22" fill="#e05878" opacity=".2"/>
+<line x1="0" y1="112" x2="120" y2="112" stroke="#e08040" stroke-width=".8" opacity=".5"/>
+<rect x="0" y="112" width="120" height="50" fill="#080410" opacity=".7"/>
+<path d="M48 112 L52 72 L60 50 L68 72 L72 112Z" fill="#f0d060" opacity=".5"/>
+<circle cx="60" cy="48" r="12" fill="#f8e060" opacity=".7"/>
+<circle cx="60" cy="48" r="7" fill="#fff8a0" opacity=".8"/>
+<g fill="white"><circle cx="20" cy="20" r="1.1" opacity=".7"/><circle cx="88" cy="12" r="1.3" opacity=".8"/><circle cx="45" cy="28" r=".8" opacity=".6"/><circle cx="110" cy="22" r=".9" opacity=".65"/><circle cx="10" cy="45" r=".7" opacity=".5"/></g>
+<path d="M0 88 Q20 84 35 86 Q45 88 50 85" stroke="white" stroke-width=".7" fill="none" opacity=".1"/>
+<path d="M70 85 Q80 88 95 85 Q108 82 120 85" stroke="white" stroke-width=".7" fill="none" opacity=".1"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Рассвет</text></svg>`},
+  {id:33, name:`Кристалл`, prompt:`Какие грани есть во мне?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c33a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0a0818"/><stop offset="100%" stop-color="#181028"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c33a)"/>
+<ellipse cx="60" cy="80" rx="38" ry="45" fill="#60a0c0" opacity=".08"/>
+<polygon points="60,22 88,58 80,105 40,105 32,58" fill="none" stroke="#80c0e0" stroke-width="1.5" opacity=".6"/>
+<polygon points="60,22 88,58 80,105 40,105 32,58" fill="#60a0d0" opacity=".08"/>
+<polygon points="60,22 88,58 74,78 60,68 46,78 32,58" fill="#80b0e0" opacity=".12"/>
+<line x1="60" y1="22" x2="74" y2="78" stroke="#80d0f0" stroke-width=".8" opacity=".4"/>
+<line x1="60" y1="22" x2="46" y2="78" stroke="#80d0f0" stroke-width=".8" opacity=".4"/>
+<line x1="60" y1="68" x2="60" y2="105" stroke="#80d0f0" stroke-width=".8" opacity=".35"/>
+<line x1="60" y1="68" x2="40" y2="105" stroke="#60b0d0" stroke-width=".6" opacity=".3"/>
+<line x1="60" y1="68" x2="80" y2="105" stroke="#60b0d0" stroke-width=".6" opacity=".3"/>
+<path d="M48 55 Q52 50 54 55 Q51 58 48 55Z" fill="white" opacity=".4"/>
+<path d="M70 48 Q74 44 76 50 Q72 53 70 48Z" fill="white" opacity=".35"/>
+<circle cx="60" cy="105" r="3" fill="#80d0f0" opacity=".4"/>
+<g fill="white"><circle cx="15" cy="18" r=".8" opacity=".5"/><circle cx="98" cy="12" r="1" opacity=".55"/><circle cx="108" cy="140" r=".9" opacity=".4"/><circle cx="20" cy="140" r=".8" opacity=".4"/></g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Кристалл</text></svg>`},
+  {id:34, name:`Лестница`, prompt:`Шаг за шагом вперёд`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c34a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#080818"/><stop offset="100%" stop-color="#181008"/></linearGradient><radialGradient id="c34b" cx="60" cy="30" r="35" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e0d080" stop-opacity=".3"/><stop offset="100%" stop-color="#e0d080" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c34a)"/>
+<circle cx="60" cy="30" r="30" fill="url(#c34b)"/>
+<g fill="#3a3030" opacity=".9">
+<rect x="20" y="128" width="80" height="10" rx="2"/>
+<rect x="26" y="116" width="68" height="10" rx="2"/>
+<rect x="32" y="104" width="56" height="10" rx="2"/>
+<rect x="38" y="92" width="44" height="10" rx="2"/>
+<rect x="44" y="80" width="32" height="10" rx="2"/>
+<rect x="50" y="68" width="20" height="10" rx="2"/>
+<rect x="54" y="56" width="12" height="10" rx="2"/>
+</g>
+<g fill="#6a5a40" opacity=".4">
+<rect x="20" y="127" width="80" height="2" rx="1"/>
+<rect x="26" y="115" width="68" height="2" rx="1"/>
+<rect x="32" y="103" width="56" height="2" rx="1"/>
+<rect x="38" y="91" width="44" height="2" rx="1"/>
+<rect x="44" y="79" width="32" height="2" rx="1"/>
+<rect x="50" y="67" width="20" height="2" rx="1"/>
+</g>
+<circle cx="60" cy="28" r="5" fill="#e0d080" opacity=".7"/>
+<circle cx="60" cy="28" r="2.5" fill="white" opacity=".6"/>
+<g fill="white"><circle cx="18" cy="20" r=".8" opacity=".5"/><circle cx="95" cy="13" r="1" opacity=".55"/></g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Лестница</text></svg>`},
+  {id:35, name:`Очаг`, prompt:`Где мой настоящий дом?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c35a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0e0808"/><stop offset="100%" stop-color="#141208"/></linearGradient><radialGradient id="c35b" cx="60" cy="95" r="38" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e05010" stop-opacity=".5"/><stop offset="100%" stop-color="#e05010" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c35a)"/>
+<circle cx="60" cy="95" r="36" fill="url(#c35b)"/>
+<path d="M18 138 L22 78 L60 42 L98 78 L102 138Z" fill="#4a3828"/>
+<path d="M20 140 L22 78 L60 42 L98 78 L100 140Z" fill="#3a2e20"/>
+<path d="M40 140 L42 98 L60 82 L78 98 L80 140Z" fill="#2a2018"/>
+<rect x="42" y="138" width="36" height="24" rx="2" fill="#3a2820"/>
+<rect x="54" y="138" width="12" height="24" rx="2" fill="#6a5030" opacity=".5"/>
+<rect x="28" y="92" width="20" height="22" rx="2" fill="#6a5030" opacity=".6"/>
+<rect x="30" y="94" width="16" height="18" rx="1" fill="#b0d0e0" opacity=".25"/>
+<rect x="72" y="92" width="20" height="22" rx="2" fill="#6a5030" opacity=".6"/>
+<rect x="74" y="94" width="16" height="18" rx="1" fill="#b0d0e0" opacity=".25"/>
+<path d="M52 138 Q52 118 54 105 Q56 95 60 90 Q64 95 66 105 Q68 118 68 138Z" fill="#e06020" opacity=".8"/>
+<path d="M54 138 Q54 120 56 108 Q58 98 60 93 Q62 98 64 108 Q66 120 66 138Z" fill="#f09030"/>
+<path d="M56 138 Q56 122 58 112 Q59 104 60 100 Q61 104 62 112 Q64 122 64 138Z" fill="#f8d060" opacity=".8"/>
+<circle cx="18" cy="22" r=".9" fill="white" opacity=".5"/><circle cx="95" cy="16" r="1" fill="white" opacity=".55"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Очаг</text></svg>`},
+  {id:36, name:`Туман`, prompt:`Что мешает мне видеть ясно?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c36a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a0e14"/><stop offset="100%" stop-color="#141828"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c36a)"/>
+<g opacity=".85">
+<ellipse cx="30" cy="65" rx="38" ry="16" fill="white" opacity=".06"/>
+<ellipse cx="80" cy="55" rx="45" ry="18" fill="white" opacity=".07"/>
+<ellipse cx="50" cy="80" rx="55" ry="22" fill="white" opacity=".08"/>
+<ellipse cx="70" cy="98" rx="50" ry="20" fill="white" opacity=".07"/>
+<ellipse cx="35" cy="112" rx="42" ry="18" fill="white" opacity=".06"/>
+<ellipse cx="85" cy="125" rx="40" ry="16" fill="white" opacity=".06"/>
+<ellipse cx="60" cy="140" rx="55" ry="20" fill="white" opacity=".07"/>
+</g>
+<path d="M52 70 Q55 58 60 54 Q65 58 68 70" stroke="#e0bc78" stroke-width="1.5" fill="none" opacity=".4"/>
+<circle cx="60" cy="54" r="3" fill="#e0bc78" opacity=".5"/>
+<g fill="white"><circle cx="15" cy="15" r=".8" opacity=".4"/><circle cx="95" cy="10" r="1" opacity=".45"/><circle cx="108" cy="38" r=".8" opacity=".35"/></g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Туман</text></svg>`},
+  {id:37, name:`Парус`, prompt:`Что несёт меня вперёд?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c37a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#040c1a"/><stop offset="60%" stop-color="#0a1e38"/><stop offset="100%" stop-color="#0e1428"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c37a)"/>
+<path d="M0 110 Q40 100 80 105 Q100 108 120 105 L120 162 L0 162Z" fill="#081420" opacity=".9"/>
+<path d="M0 108 Q40 98 80 103 Q100 106 120 103" stroke="#1a4060" stroke-width=".8" fill="none" opacity=".5"/>
+<line x1="60" y1="108" x2="60" y2="18" stroke="#9a8868" stroke-width="2" stroke-linecap="round"/>
+<path d="M60 22 Q90 38 88 80 Q80 92 60 100 Q60 62 60 22Z" fill="#e8e0d0" opacity=".85"/>
+<path d="M60 22 Q30 38 32 80 Q40 92 60 100 Q60 62 60 22Z" fill="#d8d0c0" opacity=".6"/>
+<path d="M60 22 Q88 35 87 78 Q80 90 62 99" stroke="#c0b8a8" stroke-width=".7" fill="none" opacity=".4"/>
+<rect x="48" y="106" width="24" height="5" rx="2" fill="#6a5838"/>
+<path d="M42 106 Q35 110 32 118" stroke="#6a5838" stroke-width="2" fill="none"/>
+<path d="M78 106 Q85 110 88 118" stroke="#6a5838" stroke-width="2" fill="none"/>
+<g fill="white"><circle cx="15" cy="22" r="1" opacity=".7"/><circle cx="88" cy="14" r="1.2" opacity=".75"/><circle cx="38" cy="12" r=".8" opacity=".55"/><circle cx="108" cy="32" r=".9" opacity=".65"/></g>
+<path d="M95 28 Q90 36 92 46 Q98 39 100 30 Q98 27 95 28Z" fill="white" opacity=".6"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Парус</text></svg>`},
+  {id:38, name:`Колодец`, prompt:`Что скрыто в моих глубинах?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c38a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0e1408"/><stop offset="100%" stop-color="#08100e"/></linearGradient><radialGradient id="c38b" cx="60" cy="95" r="28" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3060a0" stop-opacity=".5"/><stop offset="100%" stop-color="#3060a0" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c38a)"/>
+<circle cx="60" cy="60" r="30" fill="#2a2018" stroke="#8a7040" stroke-width="2"/>
+<circle cx="60" cy="60" r="26" fill="#1a1010"/>
+<circle cx="60" cy="75" r="22" fill="url(#c38b)"/>
+<ellipse cx="60" cy="76" rx="18" ry="8" fill="#203060" opacity=".6"/>
+<ellipse cx="55" cy="74" rx="6" ry="3" fill="white" opacity=".1"/>
+<path d="M30 42 L30 18 L90 18 L90 42" stroke="#8a7040" stroke-width="2.5" fill="none"/>
+<line x1="60" y1="18" x2="60" y2="42" stroke="#8a7040" stroke-width="2"/>
+<path d="M45 18 L60 10 L75 18" fill="#a08050"/>
+<rect x="44" y="18" width="32" height="4" rx="2" fill="#8a7040"/>
+<line x1="60" y1="22" x2="60" y2="55" stroke="#6a5030" stroke-width="1" stroke-dasharray="3,2"/>
+<circle cx="60" cy="57" r="2.5" fill="#c9a256" opacity=".6"/>
+<g fill="white"><circle cx="18" cy="25" r=".8" opacity=".5"/><circle cx="100" cy="18" r="1" opacity=".55"/><circle cx="15" cy="108" r=".8" opacity=".4"/><circle cx="108" cy="125" r=".9" opacity=".4"/></g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Колодец</text></svg>`},
+  {id:39, name:`Зерно`, prompt:`Что готово прорасти во мне?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c39a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0e0c08"/><stop offset="100%" stop-color="#181208"/></linearGradient><radialGradient id="c39b" cx="60" cy="82" r="25" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#a0c040" stop-opacity=".3"/><stop offset="100%" stop-color="#a0c040" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c39a)"/>
+<circle cx="60" cy="82" r="24" fill="url(#c39b)"/>
+<path d="M35 90 Q40 88 50 90 Q60 92 70 90 Q80 88 85 90" stroke="#5a4020" stroke-width=".8" fill="none" opacity=".5"/>
+<ellipse cx="60" cy="88" rx="18" ry="10" fill="#6a4820" opacity=".6"/>
+<ellipse cx="60" cy="82" rx="14" ry="18" fill="#8a6828" opacity=".9" rx="14"/>
+<ellipse cx="60" cy="78" rx="10" ry="14" fill="#a07830"/>
+<ellipse cx="60" cy="74" rx="7" ry="10" fill="#c09040"/>
+<ellipse cx="57" cy="72" rx="3" ry="5" fill="white" opacity=".15"/>
+<path d="M60 64 Q58 52 56 42 Q62 46 64 56 Q63 60 60 64Z" fill="#5a9020" opacity=".7"/>
+<path d="M60 64 Q60 52 64 42 Q67 50 65 60 Q63 62 60 64Z" fill="#6aaa28" opacity=".6"/>
+<ellipse cx="60" cy="140" rx="25" ry="8" fill="#1a1008" opacity=".5"/>
+<circle cx="18" cy="20" r=".8" fill="white" opacity=".5"/><circle cx="95" cy="14" r="1" fill="white" opacity=".55"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Зерно</text></svg>`},
+  {id:40, name:`Нить`, prompt:`Что связывает меня?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c40a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#100810"/><stop offset="100%" stop-color="#08100e"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c40a)"/>
+<g stroke="#c9a256" stroke-width="0.9" fill="none" opacity=".65">
+<path d="M10 15 Q30 40 55 38 Q80 36 95 55 Q108 72 100 95 Q92 118 70 128 Q48 138 30 125 Q12 112 15 90 Q18 68 38 58 Q58 48 65 30 Q72 12 90 8 Q108 4 115 20 Q122 36 110 52"/>
+</g>
+<g stroke="#e0bc78" stroke-width="0.6" fill="none" opacity=".4">
+<path d="M20 25 Q40 48 62 45 Q85 42 98 60 Q110 78 102 100 Q94 122 72 132 Q50 142 32 130"/>
+</g>
+<g fill="#c9a256" opacity=".7">
+<circle cx="10" cy="15" r="3"/><circle cx="95" cy="55" r="2.5"/><circle cx="100" cy="95" r="3"/><circle cx="30" cy="125" r="2.5"/>
+<circle cx="38" cy="58" r="2"/><circle cx="70" cy="128" r="2"/><circle cx="65" cy="30" r="2"/>
+</g>
+<g fill="#e0bc78" opacity=".5">
+<circle cx="10" cy="15" r="1.5"/><circle cx="95" cy="55" r="1.2"/><circle cx="100" cy="95" r="1.5"/>
+</g>
+<g fill="white"><circle cx="18" cy="8" r=".7" opacity=".5"/><circle cx="108" cy="12" r=".8" opacity=".55"/><circle cx="5" cy="45" r=".6" opacity=".4"/><circle cx="115" cy="138" r=".8" opacity=".4"/></g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Нить</text></svg>`},
+  {id:41, name:`Водопад`, prompt:`Что очищает и обновляет меня?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c41a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#061018"/><stop offset="100%" stop-color="#0c1820"/></linearGradient><radialGradient id="c41b" cx="55" cy="35" r="35" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#a0d0f0" stop-opacity=".25"/><stop offset="100%" stop-color="#a0d0f0" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c41a)"/>
+<rect x="0" y="112" width="120" height="50" fill="#060e14" opacity=".8"/>
+<path d="M0 112 Q30 106 60 112 Q90 118 120 112" stroke="#1a4060" stroke-width=".8" fill="none"/>
+<ellipse cx="55" cy="35" rx="32" ry="28" fill="url(#c41b)"/>
+<path d="M30 8 Q25 20 22 35 Q20 48 24 60 Q28 72 26 85 Q24 98 28 110" stroke="#60b0d8" stroke-width="8" fill="none" stroke-linecap="round" opacity=".4"/>
+<path d="M38 5 Q34 18 32 32 Q30 46 34 58 Q38 70 36 84 Q34 98 38 112" stroke="#80c8e8" stroke-width="5" fill="none" stroke-linecap="round" opacity=".55"/>
+<path d="M46 4 Q43 17 42 30 Q41 44 44 56 Q47 68 45 82 Q43 96 46 112" stroke="#a0d8f0" stroke-width="3" fill="none" stroke-linecap="round" opacity=".6"/>
+<path d="M56 5 Q54 18 54 32 Q54 46 56 58 Q58 70 56 84 Q54 98 56 112" stroke="#c0e8f8" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/>
+<path d="M64 8 Q63 20 64 34 Q65 48 64 60 Q63 72 65 86 Q66 99 64 112" stroke="#a0d0f0" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".4"/>
+<path d="M0 112 Q20 108 35 112 Q50 116 65 112 Q80 108 95 112 Q108 116 120 112" fill="#3080a0" opacity=".25"/>
+<ellipse cx="48" cy="115" rx="30" ry="6" fill="#60a0c0" opacity=".2"/>
+<g fill="white"><circle cx="80" cy="15" r=".9" opacity=".5"/><circle cx="100" cy="8" r="1" opacity=".55"/><circle cx="88" cy="28" r=".7" opacity=".4"/><circle cx="110" cy="35" r=".8" opacity=".45"/><circle cx="15" cy="140" r=".8" opacity=".35"/></g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Водопад</text></svg>`},
+  {id:42, name:`Маска`, prompt:`Что я скрываю и что показываю?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c42a" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#180a18"/><stop offset="100%" stop-color="#0a1018"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c42a)"/>
+<ellipse cx="60" cy="82" rx="40" ry="40" fill="#c9a256" opacity=".07"/>
+<ellipse cx="60" cy="80" rx="32" ry="38" fill="#1a1828" stroke="#c9a256" stroke-width="1.5" opacity=".7"/>
+<ellipse cx="60" cy="80" rx="30" ry="36" fill="#1e1c2a"/>
+<ellipse cx="44" cy="74" rx="8" ry="5" fill="#0a0810" stroke="#8a7040" stroke-width="1"/>
+<ellipse cx="76" cy="74" rx="8" ry="5" fill="#0a0810" stroke="#8a7040" stroke-width="1"/>
+<ellipse cx="44" cy="73" rx="3" ry="2.5" fill="#3060a0" opacity=".7"/>
+<ellipse cx="76" cy="73" rx="3" ry="2.5" fill="#3060a0" opacity=".7"/>
+<path d="M48 90 Q60 98 72 90" stroke="#c9a256" stroke-width="1.2" fill="none" opacity=".6" stroke-linecap="round"/>
+<path d="M42 64 Q44 58 50 60" stroke="#8a7040" stroke-width="1" fill="none" opacity=".5"/>
+<path d="M78 64 Q76 58 70 60" stroke="#8a7040" stroke-width="1" fill="none" opacity=".5"/>
+<path d="M56 48 Q60 44 64 48" stroke="#8a7040" stroke-width="1.2" fill="none" opacity=".4"/>
+<path d="M28 80 L20 80 L22 72 L28 75Z" fill="#2a1c10" stroke="#6a5020" stroke-width=".8"/>
+<path d="M92 80 L100 80 L98 72 L92 75Z" fill="#2a1c10" stroke="#6a5020" stroke-width=".8"/>
+<path d="M30 80 Q26 95 28 108 Q35 120 45 125" stroke="#8a7050" stroke-width="1.5" fill="none" opacity=".5"/>
+<path d="M90 80 Q94 95 92 108 Q85 120 75 125" stroke="#8a7050" stroke-width="1.5" fill="none" opacity=".5"/>
+<g fill="white"><circle cx="18" cy="20" r=".8" opacity=".5"/><circle cx="98" cy="12" r="1" opacity=".55"/><circle cx="108" cy="40" r=".8" opacity=".45"/><circle cx="15" cy="130" r=".7" opacity=".4"/><circle cx="105" cy="138" r=".8" opacity=".4"/></g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Маска</text></svg>`},
+  {id:43, name:`Звезда`, prompt:`Что делает меня особенным?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c43a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#04060e"/><stop offset="100%" stop-color="#080412"/></linearGradient><radialGradient id="c43b" cx="60" cy="72" r="45" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e0c870" stop-opacity=".45"/><stop offset="40%" stop-color="#c9a256" stop-opacity=".15"/><stop offset="100%" stop-color="#c9a256" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c43a)"/>
+<circle cx="60" cy="72" r="44" fill="url(#c43b)"/>
+<g stroke="#c9a256" stroke-width=".5" opacity=".25">
+<line x1="60" y1="72" x2="60" y2="15"/><line x1="60" y1="72" x2="60" y2="129"/>
+<line x1="60" y1="72" x2="3" y2="72"/><line x1="60" y1="72" x2="117" y2="72"/>
+<line x1="60" y1="72" x2="20" y2="32"/><line x1="60" y1="72" x2="100" y2="32"/>
+<line x1="60" y1="72" x2="20" y2="112"/><line x1="60" y1="72" x2="100" y2="112"/>
+<line x1="60" y1="72" x2="10" y2="50"/><line x1="60" y1="72" x2="110" y2="50"/>
+<line x1="60" y1="72" x2="10" y2="94"/><line x1="60" y1="72" x2="110" y2="94"/>
+</g>
+<polygon points="60,38 66,62 90,62 71,77 78,101 60,86 42,101 49,77 30,62 54,62" fill="#e0c870" opacity=".85"/>
+<polygon points="60,44 65,62 82,62 68,72 73,90 60,80 47,90 52,72 38,62 55,62" fill="#f0d880"/>
+<polygon points="60,50 64,62 74,62 66,68 69,80 60,74 51,80 54,68 46,62 56,62" fill="#fff8a0" opacity=".9"/>
+<circle cx="60" cy="72" r="5" fill="white" opacity=".7"/>
+<g fill="white"><circle cx="18" cy="18" r=".9" opacity=".6"/><circle cx="95" cy="10" r="1.1" opacity=".7"/><circle cx="35" cy="12" r=".7" opacity=".5"/><circle cx="108" cy="30" r=".9" opacity=".6"/><circle cx="12" cy="40" r=".7" opacity=".45"/><circle cx="15" cy="130" r=".8" opacity=".4"/><circle cx="105" cy="125" r=".9" opacity=".45"/></g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Звезда</text></svg>`},
+  {id:44, name:`Тишина`, prompt:`В чём моя внутренняя тишина?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c44a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#060810"/><stop offset="100%" stop-color="#100c08"/></linearGradient><radialGradient id="c44b" cx="60" cy="80" r="40" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e8f0f8" stop-opacity=".12"/><stop offset="100%" stop-color="#e8f0f8" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c44a)"/>
+<rect width="120" height="162" fill="url(#c44b)"/>
+<ellipse cx="60" cy="90" rx="55" ry="30" fill="white" opacity=".025"/>
+<ellipse cx="60" cy="95" rx="45" ry="22" fill="white" opacity=".02"/>
+<path d="M0 95 Q60 88 120 95" stroke="white" stroke-width=".5" fill="none" opacity=".06"/>
+<path d="M0 102 Q60 95 120 102" stroke="white" stroke-width=".4" fill="none" opacity=".04"/>
+<ellipse cx="60" cy="50" rx="18" ry="8" fill="white" opacity=".04"/>
+<g fill="white" opacity=".85"><circle cx="60" cy="48" r="2.5"/></g>
+<g stroke="white" stroke-width=".6" fill="none" opacity=".18">
+<line x1="60" y1="50" x2="60" y2="88"/>
+<path d="M52 62 Q50 70 52 78"/><path d="M68 62 Q70 70 68 78"/>
+<path d="M46 68 Q43 76 46 84"/><path d="M74 68 Q77 76 74 84"/>
+</g>
+<g fill="white"><circle cx="15" cy="18" r=".8" opacity=".4"/><circle cx="95" cy="12" r="1" opacity=".45"/><circle cx="35" cy="28" r=".6" opacity=".35"/><circle cx="108" cy="35" r=".8" opacity=".4"/><circle cx="20" cy="55" r=".6" opacity=".3"/><circle cx="105" cy="58" r=".7" opacity=".35"/><circle cx="12" cy="108" r=".7" opacity=".3"/><circle cx="108" cy="115" r=".8" opacity=".35"/><circle cx="25" cy="135" r=".7" opacity=".3"/><circle cx="92" cy="140" r=".8" opacity=".3"/></g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Тишина</text></svg>`},
+  {id:45, name:`Исток`, prompt:`Откуда я начинаю?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c45a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a0c08"/><stop offset="50%" stop-color="#102010"/><stop offset="100%" stop-color="#08101a"/></linearGradient><radialGradient id="c45b" cx="60" cy="50" r="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#80d0f0" stop-opacity=".4"/><stop offset="100%" stop-color="#80d0f0" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c45a)"/>
+<circle cx="60" cy="50" r="28" fill="url(#c45b)"/>
+<circle cx="60" cy="50" r="18" fill="#1a3040" stroke="#60b0d8" stroke-width="1.2" opacity=".8"/>
+<circle cx="60" cy="50" r="12" fill="#1e3848" opacity=".9"/>
+<circle cx="60" cy="50" r="7" fill="#3080a8" opacity=".7"/>
+<circle cx="60" cy="50" r="3.5" fill="#80c8e8" opacity=".8"/>
+<circle cx="60" cy="50" r="1.5" fill="white" opacity=".9"/>
+<path d="M60 62 Q58 75 52 88 Q45 100 40 115" stroke="#3080a8" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".5"/>
+<path d="M60 62 Q62 76 68 90 Q75 104 80 118" stroke="#3080a8" stroke-width="2" fill="none" stroke-linecap="round" opacity=".4"/>
+<path d="M60 62 Q60 78 60 95 Q60 110 60 128" stroke="#60b0d8" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".35"/>
+<g stroke="#2060a0" stroke-width="1.2" fill="none" opacity=".3">
+<path d="M40 115 Q32 125 28 138"/><path d="M80 118 Q88 128 92 140"/>
+<path d="M52 88 Q44 96 38 105"/><path d="M68 90 Q76 98 82 108"/>
+</g>
+<g fill="white" opacity=".5"><circle cx="20" cy="22" r=".9"/><circle cx="90" cy="14" r="1.1"/><circle cx="40" cy="18" r=".7"/><circle cx="108" cy="28" r=".9"/><circle cx="14" cy="42" r=".7"/><circle cx="106" cy="45" r=".8"/></g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Исток</text></svg>`},
+  {id:46, name:`Дерево`, prompt:`Что даёт мне корни и опору?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c46a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#080f0a"/><stop offset="60%" stop-color="#0e1a0e"/><stop offset="100%" stop-color="#06100a"/></linearGradient></defs>
+<rect width="120" height="162" fill="url(#c46a)"/>
+<g fill="#1a3a1a" opacity=".5"><ellipse cx="60" cy="148" rx="45" ry="6"/></g>
+<path d="M60 148 L60 95" stroke="#3d5c2a" stroke-width="5" stroke-linecap="round"/>
+<path d="M60 120 Q60 110 60 95" stroke="#4a6e32" stroke-width="5" stroke-linecap="round"/>
+<path d="M60 130 Q45 120 34 108 Q26 98 22 85" stroke="#3d5c2a" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M60 130 Q75 120 86 108 Q94 98 98 85" stroke="#3d5c2a" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M60 115 Q48 105 40 92 Q34 82 32 70" stroke="#4a6e32" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<path d="M60 115 Q72 105 80 92 Q86 82 88 70" stroke="#4a6e32" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<path d="M60 100 Q52 88 48 74 Q44 62 46 50" stroke="#3d5c2a" stroke-width="2" fill="none" stroke-linecap="round"/>
+<path d="M60 100 Q68 88 72 74 Q76 62 74 50" stroke="#3d5c2a" stroke-width="2" fill="none" stroke-linecap="round"/>
+<ellipse cx="60" cy="38" rx="22" ry="18" fill="#1e4020" stroke="#4a8030" stroke-width="1.2" opacity=".8"/>
+<ellipse cx="40" cy="55" rx="15" ry="13" fill="#1a3818" stroke="#406c28" stroke-width="1" opacity=".7"/>
+<ellipse cx="80" cy="55" rx="15" ry="13" fill="#1a3818" stroke="#406c28" stroke-width="1" opacity=".7"/>
+<ellipse cx="48" cy="28" rx="12" ry="10" fill="#224824" stroke="#50882e" stroke-width=".8" opacity=".7"/>
+<ellipse cx="72" cy="28" rx="12" ry="10" fill="#224824" stroke="#50882e" stroke-width=".8" opacity=".7"/>
+<g fill="white" opacity=".25"><circle cx="18" cy="18" r=".8"/><circle cx="95" cy="12" r=".9"/><circle cx="108" cy="35" r=".7"/><circle cx="10" cy="55" r=".7"/><circle cx="112" cy="58" r=".8"/></g>
+<path d="M60 148 Q50 152 38 153" stroke="#2a4018" stroke-width="1.5" fill="none" opacity=".5"/>
+<path d="M60 148 Q70 152 82 153" stroke="#2a4018" stroke-width="1.5" fill="none" opacity=".5"/>
+<path d="M60 148 Q58 155 55 160" stroke="#2a4018" stroke-width="1.2" fill="none" opacity=".4"/>
+<path d="M60 148 Q62 155 65 160" stroke="#2a4018" stroke-width="1.2" fill="none" opacity=".4"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Дерево</text></svg>`},
+  {id:47, name:`Зеркало воды`, prompt:`Что я вижу, когда смотрю в себя честно?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c47a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#07090e"/><stop offset="45%" stop-color="#0a0f1c"/><stop offset="100%" stop-color="#0d1828"/></linearGradient><radialGradient id="c47b" cx="60" cy="100" r="45" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#1a4060" stop-opacity=".7"/><stop offset="60%" stop-color="#0d2038" stop-opacity=".4"/><stop offset="100%" stop-color="#0d2038" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c47a)"/>
+<ellipse cx="60" cy="108" rx="42" ry="28" fill="url(#c47b)" stroke="#2a5080" stroke-width="1" opacity=".7"/>
+<ellipse cx="60" cy="108" rx="36" ry="22" fill="#0a1e38" opacity=".6"/>
+<g opacity=".35" stroke="#3a7090" stroke-width=".8" fill="none">
+  <ellipse cx="60" cy="108" rx="28" ry="16"/><ellipse cx="60" cy="108" rx="20" ry="11"/>
+  <ellipse cx="60" cy="108" rx="12" ry="6"/>
+</g>
+<path d="M30 95 Q40 88 60 86 Q80 88 90 95" stroke="#4080a0" stroke-width="1.2" fill="none" opacity=".5"/>
+<circle cx="60" cy="108" r="4" fill="#60a8c8" opacity=".4"/>
+<circle cx="60" cy="108" r="2" fill="#90c8e0" opacity=".5"/>
+<g fill="white" opacity=".6">
+  <circle cx="42" cy="102" r="1.2"/><circle cx="78" cy="104" r="1"/><circle cx="55" cy="115" r=".8"/>
+  <circle cx="68" cy="112" r=".9"/><circle cx="48" cy="110" r=".7"/>
+</g>
+<g fill="white">
+  <circle cx="22" cy="20" r=".9" opacity=".5"/><circle cx="88" cy="14" r="1.1" opacity=".6"/>
+  <circle cx="104" cy="32" r=".8" opacity=".45"/><circle cx="14" cy="38" r=".7" opacity=".4"/>
+  <circle cx="110" cy="52" r=".9" opacity=".5"/><circle cx="35" cy="16" r=".7" opacity=".4"/>
+</g>
+<path d="M28 72 Q35 68 44 66 Q55 65 60 66 Q65 65 76 66 Q85 68 92 72" stroke="#2060a0" stroke-width="1" fill="none" opacity=".4"/>
+<ellipse cx="60" cy="62" rx="14" ry="10" fill="#0c1830" stroke="#3060a0" stroke-width=".8" opacity=".4"/>
+<circle cx="60" cy="58" r="4" fill="#1a3060" opacity=".5"/>
+<circle cx="60" cy="58" r="1.5" fill="#4080c0" opacity=".6"/><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Зеркало воды</text></svg>`},
+  {id:48, name:`Горящее сердце`, prompt:`Что во мне живёт вопреки всему?`, svg:`<svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="c48a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0e0608"/><stop offset="50%" stop-color="#1c0a0c"/><stop offset="100%" stop-color="#0a0608"/></linearGradient><radialGradient id="c48b" cx="60" cy="85" r="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#d04020" stop-opacity=".35"/><stop offset="50%" stop-color="#a02010" stop-opacity=".15"/><stop offset="100%" stop-color="#800010" stop-opacity="0"/></radialGradient></defs>
+<rect width="120" height="162" fill="url(#c48a)"/>
+<ellipse cx="60" cy="90" rx="30" ry="28" fill="url(#c48b)"/>
+<path d="M60 110 Q42 96 38 82 Q34 68 44 60 Q52 54 60 62 Q68 54 76 60 Q86 68 82 82 Q78 96 60 110 Z" fill="#2a0c0e" stroke="#802020" stroke-width="1.2" opacity=".8"/>
+<path d="M60 108 Q44 95 40 82 Q36 70 46 62 Q53 57 60 64 Q67 57 74 62 Q84 70 80 82 Q76 95 60 108 Z" fill="#3a1010" stroke="#a03020" stroke-width="1" opacity=".75"/>
+<path d="M55 72 Q52 80 54 88 Q56 94 60 98" stroke="#c84030" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".7"/>
+<path d="M65 74 Q68 82 66 90" stroke="#e05030" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".6"/>
+<path d="M60 64 L58 52 L56 44 L60 38 L64 44 L62 52 L60 64" stroke="#e06030" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
+<path d="M58 52 L52 46 M62 52 L68 46" stroke="#d05020" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".6"/>
+<g fill="#e08040" opacity=".5"><ellipse cx="57" cy="42" rx="1.5" ry="2.5"/><ellipse cx="63" cy="40" rx="1.2" ry="2"/></g>
+<g fill="#ff9060" opacity=".4"><ellipse cx="60" cy="37" rx="1" ry="1.8"/></g>
+<g fill="white">
+  <circle cx="20" cy="22" r=".8" opacity=".4"/><circle cx="92" cy="16" r="1" opacity=".5"/>
+  <circle cx="106" cy="38" r=".7" opacity=".4"/><circle cx="14" cy="48" r=".8" opacity=".35"/>
+  <circle cx="108" cy="62" r=".7" opacity=".4"/><circle cx="28" cy="130" r=".7" opacity=".3"/>
+  <circle cx="96" cy="138" r=".8" opacity=".3"/>
+</g>
+<g stroke="#601010" stroke-width=".8" fill="none" opacity=".3">
+  <path d="M30 115 Q24 122 22 132"/><path d="M90 118 Q96 125 98 135"/>
+  <path d="M42 125 Q38 133 36 142"/><path d="M78 126 Q82 134 84 143"/>
+</g><rect x="0" y="162" width="120" height="18" fill="rgba(0,0,0,.55)"/><text x="60" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#e0bc78" font-style="italic">Горящее сердце</text></svg>`},
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let activeSlot=null,selCard=null,mode='closed';
+const placed={};
+const notes={};
+let qpRayNum=null;
+let qpVisible=true;
+
+function startEx(){document.getElementById('introOv').classList.add('gone');setTimeout(drawRays,300);}
+
+// ── INSTRUCTION MODAL ────────────────────────────────────────────────────────
+function openInstr(){document.getElementById('instrBg').classList.add('open');}
+function closeInstr(){document.getElementById('instrBg').classList.remove('open');}
+document.getElementById('instrBg').addEventListener('click',e=>{if(e.target===document.getElementById('instrBg')) closeInstr();});
+
+// ── QUESTIONS PANEL ──────────────────────────────────────────────────────────
+function toggleQP(){
+  qpVisible=!qpVisible;
+  document.getElementById('qp').classList.toggle('hidden',!qpVisible);
+  setTimeout(drawRays,420);
+}
+
+function showQP(rayNum){
+  const rn=parseInt(rayNum);
+  if(isNaN(rn)||!RAYS[rn]) return;
+  qpRayNum=rn;
+  const ray=RAYS[rn];
+  if(!qpVisible){qpVisible=true;document.getElementById('qp').classList.remove('hidden');setTimeout(drawRays,420);}
+  mobStepIdx=0;
+  const nameEl=document.getElementById('qpRayName');
+  const qEl=document.getElementById('qpRayQ');
+  if(nameEl){nameEl.textContent=ray?.name;nameEl.style.color=ray?.color;}
+  if(qEl) qEl.textContent=ray?.questions[0];
+
+  // highlight active slot
+  document.querySelectorAll('.slot').forEach(s=>s.classList.remove('active-hl'));
+  const activeS=document.querySelector(`.slot[data-ray="${rn}"]`);
+  if(activeS) activeS.classList.add('active-hl');
+
+  const cardRow=document.getElementById('qpCardRow');
+  if(cardRow){
+    if(placed[rn]){
+      const card=placed[rn];
+      const th=document.getElementById('qpThumb');
+      const cn=document.getElementById('qpCardName');
+      const cp=document.getElementById('qpCardPrompt');
+      if(th) th.innerHTML=card?.svg;
+      if(cn) cn.textContent=card?.name;
+      if(cp) cp.textContent=card?.prompt;
+      cardRow.style.display='flex';
+    } else {cardRow.style.display='none';}
+  }
+  renderQPBody(rn);
+}
+
+let mobStepIdx=0;
+
+function isMobile(){return window.innerWidth<=700;}
+
+function renderQPBody(rayNum){
+  const rn=parseInt(rayNum);
+  if(isNaN(rn)||!RAYS[rn]) return;
+  if(isMobile()){renderQPMobile(rn,mobStepIdx);}
+  else{renderQPDesktop(rn);}
+}
+
+function renderQPDesktop(rayNum){
+  const ray=RAYS[rayNum];
+  if(!ray) return;
+  if(!notes[rayNum]) notes[rayNum]={};
+  const n=notes[rayNum];
+  let html='';
+  ray?.questions.forEach((q,i)=>{
+    html+=`<div class="qp-q-block">
+      <div class="qp-q-num">
+        <div class="qp-q-dot" style="background:${ray?.color}1a;color:${ray?.color};border:1px solid ${ray?.color}55">${i+1}</div>
+        <div class="qp-q-text">${q}</div>
+      </div>
+      <textarea class="qp-q-area" placeholder="Ваш ответ..."
+        oninput="saveNote(${rayNum},'q${i}',this.value)">${n['q'+i]||''}</textarea>
+    </div>`;
+    if(i<ray?.questions.length-1) html+='<div class="qp-divider"></div>';
+  });
+  html+=`<div class="qp-divider"></div>
+    <div class="qp-section-label">Послание себе по этому лучу</div>
+    <textarea class="qp-letter-area" placeholder="Я — это... (напишите послание себе от первого лица)"
+      oninput="saveNote(${rayNum},'letter',this.value)">${n['letter']||''}</textarea>`;
+  document.getElementById('qpBody').innerHTML=html;
+  document.getElementById('qpBody').scrollTop=0;
+}
+
+function renderQPMobile(rayNum,stepIdx){
+  const ray=RAYS[rayNum];
+  if(!ray) return;
+  if(!notes[rayNum]) notes[rayNum]={};
+  const n=notes[rayNum];
+  const totalSteps=ray?.questions.length+1; // 6 вопросов + послание
+  const isLetter=stepIdx>=ray?.questions.length;
+  const pip=Array.from({length:totalSteps},(_,i)=>{
+    const cls=i<stepIdx?'done':i===stepIdx?'active':'';
+    return `<div class="mob-step-pip ${cls}"></div>`;
+  }).join('');
+  const cardThumb=placed[rayNum]?`<div class="mob-qp-card-thumb">${placed[rayNum]?.svg}</div>`:'';
+  let bodyHtml='';
+  if(!isLetter){
+    const q=ray?.questions[stepIdx];
+    bodyHtml=`
+      <div class="mob-step-tag">Вопрос ${stepIdx+1} из ${ray?.questions.length}</div>
+      <div class="mob-step-q">${q}</div>
+      <textarea class="mob-step-area" placeholder="Ваш ответ..."
+        oninput="saveNote(${rayNum},'q${stepIdx}',this.value)">${n['q'+stepIdx]||''}</textarea>`;
+  } else {
+    bodyHtml=`
+      <div class="mob-step-tag">Послание себе</div>
+      <div class="mob-step-q">Напишите послание себе по этому лучу от первого лица</div>
+      <textarea class="mob-step-letter-area" placeholder="Я — это..."
+        oninput="saveNote(${rayNum},'letter',this.value)">${n['letter']||''}</textarea>`;
+  }
+  const isLast=stepIdx>=totalSteps-1;
+  const nextLabel=isLast?'Готово ✦':(stepIdx===ray?.questions.length-1?'Послание →':'Следующий →');
+  document.getElementById('qpBody').innerHTML=`
+    <div class="mob-step">
+      <div class="mob-qp-hdr">
+        <div class="mob-qp-ray-name" style="color:${ray?.color}">${ray?.name}</div>
+        ${cardThumb}
+      </div>
+      <div class="mob-step-progress">${pip}</div>
+      <div class="mob-step-body">${bodyHtml}</div>
+      <div class="mob-step-nav">
+        <button class="mob-step-back" onclick="mobStepGo(${rayNum},${stepIdx-1})" ${stepIdx===0?'disabled':''}>‹</button>
+        <div class="mob-step-counter">${stepIdx+1} / ${totalSteps}</div>
+        <button class="mob-step-next" onclick="${isLast?`mobStepDone(${rayNum})`:`mobStepGo(${rayNum},${stepIdx+1})`}">${nextLabel}</button>
+      </div>
+    </div>`;
+  setTimeout(()=>{
+    const ta=document.querySelector('.mob-step-area,.mob-step-letter-area');
+    if(ta) ta.focus();
+  },80);
+}
+
+function mobStepGo(rayNum,idx){
+  const rn=parseInt(rayNum);
+  if(isNaN(rn)||!RAYS[rn]) return;
+  mobStepIdx=Math.max(0,idx);
+  renderQPMobile(rn,mobStepIdx);
+}
+
+function mobStepDone(rayNum){
+  mobStepIdx=0;
+  toast('Луч заполнен ✦');
+  // collapse questions, scroll field into view
+  document.getElementById('qp').classList.add('hidden');
+  qpVisible=false;
+}
+
+function saveNote(rayNum,key,val){
+  if(!notes[rayNum]) notes[rayNum]={};
+  notes[rayNum][key]=val;
+}
+
+// ── PICKER ───────────────────────────────────────────────────────────────────
+function openPicker(slot){
+  activeSlot=slot;selCard=null;
+  const rn=parseInt(slot.dataset.ray);
+  const ray=RAYS[rn];
+  if(!ray) return;
+  document.getElementById('mDot').style.background=ray?.color;
+  document.getElementById('mRayNm').textContent=ray?.name;
+  document.getElementById('mQ').textContent=ray?.questions[0];
+  document.getElementById('placeBtn').disabled=true;
+  document.getElementById('prevCard').innerHTML='';
+  document.getElementById('prevInfo').innerHTML='<div class="preview-empty">Выберите карту выше</div>';
+  setMode(mode);
+  document.getElementById('mBg').classList.add('open');
+}
+
+function closePicker(){document.getElementById('mBg').classList.remove('open');activeSlot=null;selCard=null;}
+
+function setMode(m){
+  mode=m;
+  document.getElementById('tabC').classList.toggle('active',m==='closed');
+  document.getElementById('tabO').classList.toggle('active',m==='open');
+  renderCards();
+}
+
+function renderCards(){
+  const body=document.getElementById('mBody');
+  if(mode==='closed'){
+    const shuffled=[...CARDS].sort(()=>Math.random()-.5);
+    let h='<p class="shuffle-hint">Нажмите на любую карту — доверьтесь интуиции ✦</p><div class="cards-grid">';
+    shuffled.forEach(c=>{
+      h+=`<div class="card-item" data-id="${c.id}" onclick="selClosed(this,${c.id})"><div class="card-back"><div class="card-back-inner"><span class="card-back-star">✦</span><div class="card-back-text">Я — Звезда</div></div></div></div>`;
+    });
+    h+='</div>';body.innerHTML=h;
+  } else {
+    let h='<p class="shuffle-hint">Рассмотрите карты и выберите ту, что откликается ✦</p><div class="cards-grid">';
+    CARDS.forEach(c=>{
+      const sel=selCard&&selCard?.id===c.id?' selected':'';
+      h+=`<div class="card-item${sel}" data-id="${c.id}" onclick="selOpen(this,${c.id})" title="${c.name}">${c.svg}</div>`;
+    });
+    h+='</div>';body.innerHTML=h;
+  }
+}
+
+function selClosed(el,id){
+  el.classList.add('flipping');
+  setTimeout(()=>{
+    const card=CARDS.find(c=>c.id===+id);if(!card)return;
+    el.innerHTML=card?.svg;el.classList.remove('flipping');
+    document.querySelectorAll('.card-item.selected').forEach(e=>e.classList.remove('selected'));
+    el.classList.add('selected');selCard=card;updatePreview(card);
+  },230);
+}
+function selOpen(el,id){
+  document.querySelectorAll('.card-item').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');selCard=CARDS.find(c=>c.id===+id);if(!selCard)return;updatePreview(selCard);
+}
+function updatePreview(card){
+  if(!card)return;
+  document.getElementById('prevCard').innerHTML=card?.svg;
+  document.getElementById('prevInfo').innerHTML=`<div class="preview-name">${card?.name}</div><div class="preview-hint">${card?.prompt}</div>`;
+  document.getElementById('placeBtn').disabled=false;
+}
+
+function placeCard(){
+  if(!activeSlot||!selCard) return;
+  const rn=parseInt(activeSlot.dataset.ray);
+  placed[rn]=selCard;
+  activeSlot.innerHTML=`<div class="slot-card-wrap">${selCard?.svg}</div><button class="slot-remove" onclick="rmCard(event,this)">✕</button>`;
+  activeSlot.classList.add('filled');
+  updateCounter();closePicker();
+  setTimeout(drawRays,50);
+  showQP(rn);
+  toast(`«${selCard?.name}» размещена ✦`);
+}
+
+function rmCard(e,btn){
+  e.stopPropagation();
+  const slot=btn.closest('.slot');
+  const rn=parseInt(slot.dataset.ray);
+  delete placed[rn];
+  const labels={0:'Я сейчас',1:'Сила',2:'Достижения',3:'Уникальность',4:'Ценности',5:'Жизненность',6:'Опора',7:'Дар',8:'Будущее «я»',9:'Принятие',10:'Послание'};
+  const icon=rn===0?'✦':'◈';
+  slot.innerHTML=`<div class="slot-icon">${icon}</div><div class="slot-label">${labels[rn]}</div><button class="slot-remove" onclick="rmCard(event,this)">✕</button>`;
+  slot.classList.remove('filled');
+  slot.classList.remove('active-hl');
+  updateCounter();
+  if(qpRayNum===rn) showQP(rn);
+}
+
+function clearAll(){
+  if(!confirm('Очистить всё поле? Карты и записи сохранятся.')) return;
+  document.querySelectorAll('.slot.filled').forEach(slot=>{
+    const btn=slot.querySelector('.slot-remove');
+    if(btn) rmCard({stopPropagation:()=>{}},btn);
+  });
+  document.querySelectorAll('.slot.active-hl').forEach(s=>s.classList.remove('active-hl'));
+  setTimeout(drawRays,50);
+  toast('Поле очищено');
+}
+
+function updateCounter(){
+  const n=Object.keys(placed).length;
+  document.getElementById('ctr').textContent=`${n} / 11`;
+  document.getElementById('ftrCount').textContent=`Карт размещено: ${n} из 11`;
+}
+
+document.getElementById('mBg').addEventListener('click',e=>{if(e.target===document.getElementById('mBg')) closePicker();});
+
+// ── SAVE / EXPORT ────────────────────────────────────────────────────────────
+function buildExportText(){
+  const date=new Date().toLocaleDateString('ru-RU',{day:'2-digit',month:'long',year:'numeric'});
+  let out=`✦ Я — ЗВЕЗДА · Мои ответы
+${date}
+${'═'.repeat(48)}
+
+`;
+  let hasAny=false;
+  for(let rn=0;rn<=10;rn++){
+    const ray=RAYS[rn];
+    if(!ray) continue;
+    const card=placed[rn];
+    const n=notes[rn]||{};
+    const qs=ray?.questions;
+    const hasContent=card||qs.some((_,i)=>n['q'+i]&&n['q'+i].trim())||(n.letter&&n.letter.trim());
+    if(!hasContent) continue;
+    hasAny=true;
+    out+=`✦ ${ray?.name.toUpperCase()}
+`;
+    if(card) out+=`  Карта: «${card?.name}» — ${card?.prompt}
+`;
+    out+=`
+`;
+    qs.forEach((q,i)=>{
+      const ans=(n['q'+i]||'').trim();
+      if(ans) out+=`  Вопрос ${i+1}: ${q}
+  → ${ans}
+
+`;
+    });
+    if(n.letter&&n.letter.trim()) out+=`  Послание себе:
+  «${n.letter.trim()}»
+
+`;
+    out+=`${'─'.repeat(48)}
+
+`;
+  }
+  if(!hasAny) out+='(ответы ещё не заполнены)\n';
+  out+=`\n✦ Я — звезда. И всегда была ею.`;
+  return out;
+}
+
+function openSave(){
+  const text=buildExportText();
+  document.getElementById('saveBody').innerHTML=
+    `<div style="margin-bottom:10px;font-size:10px;color:var(--text-s);font-style:italic">Предпросмотр — все ваши ответы:</div>
+     <textarea class="save-raw" id="saveRaw" readonly>${escHtml(text)}</textarea>`;
+  document.getElementById('saveBg').classList.add('open');
+  setTimeout(()=>document.getElementById('saveRaw')&&(document.getElementById('saveRaw').scrollTop=0),50);
+}
+function closeSave(){document.getElementById('saveBg').classList.remove('open');}
+document.getElementById('saveBg').addEventListener('click',e=>{if(e.target===document.getElementById('saveBg')) closeSave();});
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function copyText(){
+  const text=buildExportText();
+  navigator.clipboard.writeText(text).then(()=>toast('Скопировано ✦')).catch(()=>{
+    const ta=document.getElementById('saveRaw');
+    if(ta){ta.select();document.execCommand('copy');toast('Скопировано ✦');}
+  });
+}
+
+function downloadTxt(){
+  const text=buildExportText();
+  const date=new Date().toISOString().slice(0,10);
+  const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`ya-zvezda-${date}.txt`;
+  a.click();URL.revokeObjectURL(a.href);
+  toast('Файл сохранён ✦');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let tTimer;
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(tTimer);tTimer=setTimeout(()=>el.classList.remove('show'),2400);
+}
+
+window.onerror=function(msg,src,line,col,err){
+  const t=document.getElementById('toast');
+  if(t){t.style.background='#3a0808';t.style.color='#ffaaaa';t.style.bottom='80px';t.style.maxWidth='90vw';t.style.fontSize='11px';t.style.whiteSpace='pre-wrap';t.textContent='ERR line '+line+': '+msg+(err?' | '+err.stack.split('\n').slice(0,3).join(' | '):'');t.classList.add('show');}
+  console.error('GLOBAL ERROR line '+line+':',msg,err);
+  return false;
+};
+</script>
+</body>
+</html>
