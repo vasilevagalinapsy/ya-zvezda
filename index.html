@@ -312,32 +312,15 @@ body{font-family:'Jost',sans-serif;font-weight:300;color:var(--text);user-select
   .hdr-star{font-size:17px}
   .btn{font-size:9px;padding:5px 10px}
   .counter{display:none}
+  /* On mobile: field takes full body, QP is hidden (shown as bottom sheet) */
   .app-body{flex-direction:column;overflow:hidden}
-  .field-panel{flex:none;height:56dvh;position:relative}
+  .field-panel{flex:1;position:relative}
   .field{inset:7px 8px 5px 8px;gap:5px}
   .slot-label{font-size:clamp(7px,2.2vw,10px);letter-spacing:.06em}
   .slot-center .slot-label{font-size:clamp(11px,3.5vw,14px)}
   .slot-center .slot-icon{font-size:clamp(18px,5vw,26px)}
-  /* QP as bottom drawer */
-  .qp{
-    width:100% !important;
-    flex:1;
-    border-left:none;
-    border-top:1px solid var(--border);
-    overflow:hidden;
-  }
-  .qp.hidden{
-    width:100% !important;
-    height:0;flex:none;
-    border:none;
-    overflow:hidden;
-  }
-  .qp-hdr{padding:12px 14px 10px}
-  .qp-ray-name{font-size:18px}
-  .qp-body{padding:12px 14px 16px}
-  .qp-q-text{font-size:14px}
-  .qp-q-area{font-size:12px;min-height:56px}
-  .qp-letter-area{font-size:14px;min-height:72px}
+  /* Hide desktop QP on mobile - we use bottom sheet instead */
+  .qp{display:none !important}
   .ftr{display:none}
   .modal{width:100vw;max-height:92dvh;border-radius:14px 14px 0 0;position:fixed;bottom:0;left:0;right:0;top:auto}
   .modal-bg{align-items:flex-end}
@@ -513,6 +496,36 @@ body{font-family:'Jost',sans-serif;font-weight:300;color:var(--text);user-select
     </div>
     <p id="ftrCount">Карт размещено: 0 из 11</p>
   </footer>
+</div>
+
+
+<!-- MOBILE QUESTIONS SHEET -->
+<div class="modal-bg" id="mobQBg">
+  <div class="modal" id="mobQModal" style="max-height:88dvh;display:flex;flex-direction:column">
+    <div style="padding:10px 16px 0;flex-shrink:0">
+      <div style="width:40px;height:4px;border-radius:2px;background:rgba(201,162,86,.3);margin:0 auto 12px"></div>
+    </div>
+    <div style="padding:0 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="mobQThumb" style="width:72px;height:108px;border-radius:8px;overflow:hidden;border:1px solid rgba(201,162,86,.4);background:var(--panel);display:none;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.6)"><style>#mobQThumb svg{height:100%;width:auto;display:block;border-radius:7px}</style></div>
+        <div>
+          <div id="mobQRayName" style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--gold-l)"></div>
+          <div id="mobQCardName" style="font-size:13px;color:var(--gold-l);font-family:'Cormorant Garamond',serif;font-style:italic;margin-top:2px"></div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeMobQ()">✕</button>
+    </div>
+    <!-- progress pips -->
+    <div id="mobQPips" style="display:flex;gap:5px;padding:10px 16px 0;flex-shrink:0"></div>
+    <!-- question body -->
+    <div id="mobQBody" style="flex:1;overflow-y:auto;padding:14px 16px 8px;display:flex;flex-direction:column"></div>
+    <!-- navigation -->
+    <div style="display:flex;gap:10px;padding:10px 16px 20px;flex-shrink:0;align-items:center;border-top:1px solid var(--border)">
+      <button id="mobQBack" onclick="mobQNav(-1)" style="width:48px;height:48px;border-radius:50%;border:1px solid rgba(201,162,86,.25);background:transparent;color:var(--text-m);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">‹</button>
+      <div id="mobQCounter" style="font-size:10px;color:var(--text-s);white-space:nowrap;flex-shrink:0;text-align:center;min-width:40px"></div>
+      <button id="mobQNext" onclick="mobQNav(1)" style="flex:1;height:48px;border-radius:24px;border:1.5px solid var(--gold);background:rgba(201,162,86,.12);color:var(--gold-l);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer"></button>
+    </div>
+  </div>
 </div>
 
 <!-- SAVE MODAL -->
@@ -1637,18 +1650,117 @@ function showQP(rayNum){
       cardRow.style.display='flex';
     } else {cardRow.style.display='none';}
   }
-  renderQPBody(rn);
+  if(!isMobile()) renderQPBody(rn);
 }
 
 let mobStepIdx=0;
+let mobQRayNum=null;
 
 function isMobile(){return window.innerWidth<=700;}
 
 function renderQPBody(rayNum){
   const rn=parseInt(rayNum);
   if(isNaN(rn)||!RAYS[rn]) return;
-  if(isMobile()){renderQPMobile(rn,mobStepIdx);}
+  if(isMobile()){openMobQ(rn,0);}
   else{renderQPDesktop(rn);}
+}
+
+// ── MOBILE BOTTOM SHEET ──────────────────────────────────────────────────────
+function openMobQ(rayNum,stepIdx){
+  const rn=parseInt(rayNum);
+  if(isNaN(rn)||!RAYS[rn]) return;
+  mobQRayNum=rn;
+  mobStepIdx=stepIdx||0;
+  const ray=RAYS[rn];
+  const card=placed[rn];
+  // header
+  document.getElementById('mobQRayName').textContent=ray?.name||'';
+  document.getElementById('mobQRayName').style.color=ray?.color||'var(--gold)';
+  const thumb=document.getElementById('mobQThumb');
+  const cardName=document.getElementById('mobQCardName');
+  if(card&&thumb){
+    thumb.innerHTML=card?.svg||'';
+    thumb.style.display='flex';
+    cardName.textContent=card?.name||'';
+  } else {
+    if(thumb) thumb.style.display='none';
+    if(cardName) cardName.textContent='';
+  }
+  renderMobQStep();
+  document.getElementById('mobQBg').classList.add('open');
+}
+
+function closeMobQ(){
+  document.getElementById('mobQBg').classList.remove('open');
+}
+
+function mobQNav(dir){
+  const ray=RAYS[mobQRayNum];
+  if(!ray) return;
+  const total=ray.questions.length+1;
+  const next=mobStepIdx+dir;
+  if(next<0) return;
+  if(next>=total){closeMobQ();return;}
+  mobStepIdx=next;
+  renderMobQStep();
+}
+
+function renderMobQStep(){
+  const ray=RAYS[mobQRayNum];
+  if(!ray) return;
+  if(!notes[mobQRayNum]) notes[mobQRayNum]={};
+  const n=notes[mobQRayNum];
+  const total=ray.questions.length+1;
+  const isLetter=mobStepIdx>=ray.questions.length;
+
+  // pips
+  const pipsEl=document.getElementById('mobQPips');
+  if(pipsEl){
+    pipsEl.innerHTML=Array.from({length:total},(_,i)=>{
+      const cls=i<mobStepIdx?'done':i===mobStepIdx?'active':'';
+      const bg=cls==='active'?'var(--gold)':cls==='done'?'rgba(201,162,86,.7)':'rgba(201,162,86,.18)';
+      return `<div style="flex:1;height:3px;border-radius:2px;background:${bg};transition:background .3s"></div>`;
+    }).join('');
+  }
+
+  // counter & next button label
+  const counter=document.getElementById('mobQCounter');
+  const nextBtn=document.getElementById('mobQNext');
+  const backBtn=document.getElementById('mobQBack');
+  if(counter) counter.textContent=(mobStepIdx+1)+' / '+total;
+  if(backBtn) backBtn.disabled=mobStepIdx===0;
+  const isLast=mobStepIdx>=total-1;
+  if(nextBtn) nextBtn.textContent=isLast?'Готово ✦':(mobStepIdx===ray.questions.length-1?'Послание →':'Следующий →');
+
+  // body
+  const body=document.getElementById('mobQBody');
+  if(!body) return;
+  if(!isLetter){
+    const q=ray.questions[mobStepIdx];
+    body.innerHTML=`
+      <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:10px;flex-shrink:0">Вопрос ${mobStepIdx+1} из ${ray.questions.length}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-style:italic;color:var(--text);line-height:1.55;margin-bottom:16px;flex-shrink:0">${q}</div>
+      <textarea id="mobQArea" placeholder="Ваш ответ..."
+        style="width:100%;flex:1;min-height:130px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;font-family:'Jost',sans-serif;font-size:15px;color:var(--text);resize:none;outline:none;line-height:1.7;-webkit-appearance:none;box-sizing:border-box"
+        oninput="mobQSave()">${n['q'+mobStepIdx]||''}</textarea>`;
+  } else {
+    body.innerHTML=`
+      <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:10px;flex-shrink:0">Послание себе</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-style:italic;color:var(--text);line-height:1.55;margin-bottom:16px;flex-shrink:0">Напишите послание себе по этому лучу от первого лица</div>
+      <textarea id="mobQArea" placeholder="Я — это..."
+        style="width:100%;flex:1;min-height:130px;background:rgba(201,162,86,.05);border:1px solid rgba(201,162,86,.2);border-radius:10px;padding:12px 14px;font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--text);resize:none;outline:none;line-height:1.7;font-style:italic;-webkit-appearance:none;box-sizing:border-box"
+        oninput="mobQSave()">${n['letter']||''}</textarea>`;
+  }
+  // focus textarea
+  setTimeout(()=>{ const ta=document.getElementById('mobQArea'); if(ta) ta.focus(); },120);
+}
+
+function mobQSave(){
+  const ta=document.getElementById('mobQArea');
+  if(!ta||mobQRayNum===null) return;
+  if(!notes[mobQRayNum]) notes[mobQRayNum]={};
+  const isLetter=mobStepIdx>=RAYS[mobQRayNum]?.questions?.length;
+  notes[mobQRayNum][isLetter?'letter':'q'+mobStepIdx]=ta.value;
 }
 
 function renderQPDesktop(rayNum){
@@ -1676,79 +1788,12 @@ function renderQPDesktop(rayNum){
   document.getElementById('qpBody').scrollTop=0;
 }
 
-function renderQPMobile(rayNum,stepIdx){
-  const ray=RAYS[rayNum];
-  if(!ray) return;
-  if(!notes[rayNum]) notes[rayNum]={};
-  const n=notes[rayNum];
-  const totalSteps=ray?.questions.length+1; // 6 вопросов + послание
-  const isLetter=stepIdx>=ray?.questions.length;
-  const pip=Array.from({length:totalSteps},(_,i)=>{
-    const cls=i<stepIdx?'done':i===stepIdx?'active':'';
-    return `<div class="mob-step-pip ${cls}"></div>`;
-  }).join('');
-  const cardThumb=placed[rayNum]?`<div class="mob-qp-card-thumb">${placed[rayNum]?.svg}</div>`:'';
-  let bodyHtml='';
-  if(!isLetter){
-    const q=ray?.questions[stepIdx];
-    bodyHtml=`
-      <div class="mob-step-tag">Вопрос ${stepIdx+1} из ${ray?.questions.length}</div>
-      <div class="mob-step-q">${q}</div>
-      <textarea class="mob-step-area" placeholder="Ваш ответ..."
-        oninput="saveNote(${rayNum},'q${stepIdx}',this.value)">${n['q'+stepIdx]||''}</textarea>`;
-  } else {
-    bodyHtml=`
-      <div class="mob-step-tag">Послание себе</div>
-      <div class="mob-step-q">Напишите послание себе по этому лучу от первого лица</div>
-      <textarea class="mob-step-letter-area" placeholder="Я — это..."
-        oninput="saveNote(${rayNum},'letter',this.value)">${n['letter']||''}</textarea>`;
-  }
-  const isLast=stepIdx>=totalSteps-1;
-  const nextLabel=isLast?'Готово ✦':(stepIdx===ray?.questions.length-1?'Послание →':'Следующий →');
-  document.getElementById('qpBody').innerHTML=`
-    <div class="mob-step">
-      <div class="mob-qp-hdr">
-        <div class="mob-qp-ray-name" style="color:${ray?.color}">${ray?.name}</div>
-        ${cardThumb}
-      </div>
-      <div class="mob-step-progress">${pip}</div>
-      <div class="mob-step-body">${bodyHtml}</div>
-      <div class="mob-step-nav">
-        <button class="mob-step-back" onclick="mobStepGo(${rayNum},${stepIdx-1})" ${stepIdx===0?'disabled':''}>‹</button>
-        <div class="mob-step-counter">${stepIdx+1} / ${totalSteps}</div>
-        <button class="mob-step-next" onclick="${isLast?`mobStepDone(${rayNum})`:`mobStepGo(${rayNum},${stepIdx+1})`}">${nextLabel}</button>
-      </div>
-    </div>`;
-  setTimeout(()=>{
-    const ta=document.querySelector('.mob-step-area,.mob-step-letter-area');
-    if(ta) ta.focus();
-  },80);
-}
-
-function mobStepGo(rayNum,idx){
-  const rn=parseInt(rayNum);
-  if(isNaN(rn)||!RAYS[rn]) return;
-  mobStepIdx=Math.max(0,idx);
-  renderQPMobile(rn,mobStepIdx);
-}
-
-function mobStepDone(rayNum){
-  mobStepIdx=0;
-  toast('Луч заполнен ✦');
-  // collapse questions, scroll field into view
-  document.getElementById('qp').classList.add('hidden');
-  qpVisible=false;
-}
-
-function saveNote(rayNum,key,val){
-  if(!notes[rayNum]) notes[rayNum]={};
-  notes[rayNum][key]=val;
-}
 
 // ── PICKER ───────────────────────────────────────────────────────────────────
 function openPicker(slot){
-  activeSlot=slot;selCard=null;
   const rn=parseInt(slot.dataset.ray);
+  if(isMobile()&&placed[rn]){openMobQ(rn,0);return;}
+  activeSlot=slot;selCard=null;
   const ray=RAYS[rn];
   if(!ray) return;
   document.getElementById('mDot').style.background=ray?.color;
@@ -1817,7 +1862,7 @@ function placeCard(){
   activeSlot.classList.add('filled');
   updateCounter();closePicker();
   setTimeout(drawRays,50);
-  showQP(rn);
+  if(isMobile()){openMobQ(rn,0);}else{showQP(rn);}
   toast(`«${selCard?.name}» размещена ✦`);
 }
 
@@ -1853,6 +1898,7 @@ function updateCounter(){
 }
 
 document.getElementById('mBg').addEventListener('click',e=>{if(e.target===document.getElementById('mBg')) closePicker();});
+document.getElementById('mobQBg').addEventListener('click',e=>{if(e.target===document.getElementById('mobQBg')) closeMobQ();});
 
 // ── SAVE / EXPORT ────────────────────────────────────────────────────────────
 function buildExportText(){
